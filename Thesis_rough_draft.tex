@@ -1,0 +1,265 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+
+\title{Layout Quickcheck - Web Browser Layout Fuzzer for Detecting Under Invalidation Bugs}
+
+\author{
+\IEEEauthorblockN{Jesus Ponce}
+\IEEEauthorblockA{
+University of Utah
+}
+\and
+\IEEEauthorblockN{Pavel Pancheckha}
+\IEEEauthorblockA{
+University of Utah
+}
+\and
+\IEEEauthorblockN{Stefan Nagy}
+\IEEEauthorblockA{
+University of Utah
+}
+}
+
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+TBD
+\end{abstract}
+
+\section{INTRODUCTION}
+\begin{itemize}
+    \item P1: Web browsers are widely used and contain bugs that fuzzing can detect.
+    \item P2: Existing web browser fuzzers often target regression via differential testing, while Layout Quickcheck instead detects under-invalidation bugs directly without relying on a separate browser because this relies on there being a correct implementation to compare against.
+    \item P3: Under-invalidation bugs are important and existing layout fuzzers do not specifically target under-invalidation bugs.
+    \item P4: Because of these issues we create the first web browser layout fuzzer for detecting under-invalidation bugs.
+    \item P5: We evaluate the fuzzer and discover previously unknown under-invalidation bugs.
+\end{itemize}
+This paper introduces the first Web Browser Layout Fuzzer for Detecting Under Invalidation Bug:
+\begin{itemize}
+    \item We Examine Challenges of detecting and categorizing under-invalidation bugs.
+    \item We Come up with solution to these challenges. 
+    \item We Evaluate Capabilities through studies and discover bugs. 
+    \item We Release Layout quickcheck artifacts and benchmarks.
+\end{itemize}
+
+\section{BACKGROUND, RELATED WORK, AND MOTIVATION}
+Introduce Topics related to Layout Quickcheck 
+\subsection{Web Browsers}
+\begin{itemize}
+    \item P1: Web Browsers are critical in software and are a large software market.
+    \item P2: Web browsers primarily process structured languages such as HTML and CSS
+    \item P3: Due to processing in structured languages, fuzzers struggle to generate valid inputs. 
+    \item P4: Browsers use invalidation to decide which screen regions to update after a change.
+    \item P5: Over-invalidation updates too much and hurts performance, while under-invalidation updates too little and leaves incorrect pixels.
+    \item P6: Chromium's LayoutNG redesign treats under-invalidation as a key correctness issue in browser layout.
+\end{itemize}
+\subsection{Why Fuzzers Fail to Find Under-Invalidation Bugs}
+
+Fuzzing is a bug finding technique with many approaches, but existing fuzzers struggle to detect under-invalidation bugs.
+
+\begin{itemize}
+    \item P1: Mutation-based fuzzers focus on crashes and memory corruption bugs instead of visual rendering inconsistencies.
+    
+    \item P2: Differential fuzzers compare browser outputs, but rely on the existence of a correct implementation.
+\end{itemize}
+
+\subsection{Why it is Difficult to Isolate Under-Invalidation Bugs?}
+
+\begin{itemize}
+    \item P1: Many generated inputs trigger the same underlying bug.
+    
+    \item P2: Under-invalidation bugs often depend on specific rendering states and interaction sequences.
+    
+    \item P3: Large and complex HTML/CSS inputs make minimization and deduplication difficult.
+\end{itemize}
+Motivation: the need for an under-invalidation web browser layout fuzzer. As existing browser fuzzers struggle to detect under-invalidation bugs, we aim to generate, minimize, and categorize these bugs. 
+
+\section{CHALLENGES AND SOLUTIONS}
+In order to create a system for fuzzing under-invalidation bugs, we define the main challenges that must be overcome.
+
+\subsection{Challenge 1: Generating Inputs that Trigger Under-Invalidation Bugs}
+The goal is not only to generate valid pages, but to generate page updates that are likely to exercise layout invalidation logic. Layout QuickCheck therefore biases generation toward CSS changes that should force the browser to recompute layout.
+\begin{itemize}
+    \item P1: \texttt{display} is a useful target because it controls major layout modes and can affect both an element and its descendants.
+    
+    \item P2: Grid layout creates many invalidation opportunities because templates, gaps, placement, and auto-flow can all change how children are positioned.
+    
+    \item P3: \texttt{display:flow-root} is important because it changes layout boundaries and reflow-root behavior.
+    
+    \item P4: Width and height changes directly affect box geometry, making them natural triggers for missed layout updates.
+    
+    \item P5: Percentage sizes exercise parent-dependent layout constraints, while pixel sizes make expected geometry changes easier to observe.
+    
+    \item P6: Transform changes affect visual position and reported geometry, so stale transform state can expose missed updates.
+    
+    \item P7: Disabling noisy properties such as \texttt{writing-mode}, \texttt{content-visibility}, padding, and table display values keeps generated tests focused on the layout behavior being studied.
+    
+
+\end{itemize}
+Solution 1: The system steers random CSS updates toward properties whose changes should require layout invalidation, then checks whether incremental rendering matches a fresh layout.
+
+\subsection{Challenge 2: Minimizing and Isolating Under-Invalidation Bugs}
+
+Under-invalidation bugs often produce large and complex inputs that are difficult to analyze.
+
+\begin{itemize}
+    \item P1: Effective bug trigering inputs are very large.
+    
+    \item P2: Large HTML and CSS inputs make bug isolation difficult.
+    
+    \item P3: Minimization techniques are expensive and time consuming.
+\end{itemize}
+
+Solution 2: The system minimizes bug-triggering inputs and extracts the core structures responsible for the bug.
+\subsection{Challenge 3: Grouping and Categorizing Under-Invalidation Bugs}
+
+A major challenge in layout fuzzing is reducing duplicate bug reports.
+
+\begin{itemize}
+    \item P1: Fuzzers often generate many inputs that trigger the same underlying bug.
+    
+    \item P2: Identifying the core structure of a bug is difficult, especially when the process must be automated.
+    
+    \item P3: Structural and style relationships must be represented consistently.
+
+    \item P4: Some invalidation bugs require architectural changes, so reports should help developers focus on identifying recurring and fixable patterns.
+\end{itemize}
+
+Solution 3: The system groups bugs using structural rules and merged bug representations so developers do not need to inspect many duplicate micro bugs and can instead focus on actionable bug patterns.
+
+\section{IMPLEMENTATION}
+Layout QuickCheck is implemented as a Selenium-based fuzzing pipeline that generates HTML/CSS test cases, runs them in a target browser, detects under-invalidation bugs, and post-processes bug reports.
+
+\subsection{Fuzzing Process Execution}
+\begin{itemize}
+    \item P1: Layout QuickCheck generates a random DOM tree with base CSS styles and modified CSS styles.
+    \item P2: The generated page is executed in a real browser through Selenium WebDriver.
+    \item P3: The harness compares layout after incremental style changes against layout after a fresh reload to detect under-invalidation bugs.
+\end{itemize}
+
+\subsection{Test Case Mutation and Trimming}
+\begin{itemize}
+    \item P1: When a bug is found, Layout QuickCheck repeatedly applies minimization steps and keeps only changes that still reproduce the bug.
+    \item P2: The minimizer removes unnecessary elements, CSS rules, and style changes from the generated test case.
+    \item P3: \texttt{Minify\_MoveStyleChangeToFirstLoad} moves nonessential modified styles into the base styles, leaving the modified styles most critical to reproducing the bug.
+    \item P4: The final minimized page is saved with metadata describing the affected styles and layout differences.
+\end{itemize}
+\subsection{Bug Categorization and Deduplication}
+\begin{itemize}
+    \item P1: Layout QuickCheck converts minimized bugs into structural representations that include the DOM tree, base styles, and modified styles.
+    \item P2: The system compares new bugs against existing bug groups to identify repeated instances of the same underlying issue.
+    \item P3: Matching bugs are placed into existing groups, while new patterns can form new bug groups with generated rules.
+\end{itemize}
+\subsection{Supported Software and Browser Platforms}
+\begin{itemize}
+    \item P1: Layout QuickCheck supports browser testing through Selenium variants for Chrome, Firefox, and Safari.
+    \item P2: Browser variants can be configured with custom binaries, WebDriver paths, viewport sizes, and headless execution.
+    \item P3: Bug reports are grouped using structural rules so repeated instances of the same underlying bug can be categorized together.
+\end{itemize}
+
+\section{EVALUATION}
+(what are the concrete experiments that we want to run?Add in modified and base styles? For example for the minimization, initial vs final. Minimization with vs without the move modified styles to base styles.)
+
+\textbf{Q1: How effective is the system at discovering under-invalidation bugs?}
+Main Goal: How effective at triggering a bug?(Success rate; bugs per number of generation)
+Test: Run the system for a fixed number of iterations and measure how many bugs are found.
+Variance: Display property, Grid Property, Pixel vs percentage, Transform Property, Flow-root property, etc.
+
+\vspace{0.5em}
+
+\textbf{Q2: How effective are the minimization and clustering techniques?}
+
+Main Goal: How effective at processing a bug?(Speed; number of iterations; time to minimize; time to cluster)
+Test: Run the system for a fixed number of time units and measure how many bugs are found.
+Variance: with vs without clustering; with vs without minimization; with vs without moving modified styles to base styles.
+
+\vspace{0.5em}
+
+\textbf{Q3: Does the system discover real and unique under-invalidation bugs?}
+Main Goal: How effective at finding unique bugs?(Quality; number of unique bugs; number of duplicate bugs)
+Test: Run the system for a long time and manually measure how many unique bugs are found.
+Variance: ???
+\vspace{0.5em}
+
+\textbf{Benchmarks:}
+
+\vspace{0.5em}
+
+\textbf{Experiment Setup \& Infrastructure:}
+
+\vspace{0.5em}
+
+\textbf{Post-processing Results:}
+
+\vspace{0.5em}
+
+\subsection{Q1: How effective is the system at discovering under-invalidation bugs?}
+
+\textbf{Outcomes:}
+
+\vspace{0.5em}
+
+\subsection{Q2: How effective are the minimization and clustering techniques?}
+
+\textbf{Outcomes:}
+
+\vspace{0.5em}
+
+\subsection{Q3: Does the system discover real and unique under-invalidation bugs?}
+
+\textbf{Outcomes:}
+
+\vspace{0.5em}
+
+\textbf{Case Study 1:}
+
+\vspace{0.5em}
+
+\textbf{Case Study 2:}
+
+\vspace{0.5em}
+
+\textbf{Case Study 3:}
+
+\vspace{0.5em}
+
+\textbf{Developer Responses:}
+
+\vspace{0.5em}
+
+\section{DISCUSSION \& THREATS TO VALIDITY}
+
+\textbf{Improving Runtime Throughput:}
+
+\vspace{0.5em}
+
+\textbf{Supporting Other Browsers:}
+
+\vspace{0.5em}
+
+\textbf{(Other limitation 1)}
+
+\vspace{0.5em}
+
+\textbf{(Other limitation 2)}
+
+\vspace{0.5em}
+
+\section{CONCLUSION}
+
+\section*{ACKNOWLEDGMENTS}
+
+\nocite{kilpatrick2021layoutng,panchekha2024reusing}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
