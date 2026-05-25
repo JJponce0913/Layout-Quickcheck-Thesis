@@ -58,15 +58,75 @@ Moreover, LayoutQuickCheck's minimization tooling
   dramatically reducing the time needed to triage bugs.
 \end{abstract}
 
-\section{INTRODUCTION}
+\section{Introduction}
 
-\textit{Web browsers}---software that retrieves, interprets, and displays web pages---are central to modern computing, with browser-based usage corresponding to over \textbf{80\%} of daily work in some organizations~\cite{montenegro2025workforce}. As web browsers have become the primary interface for accessing the Internet, ensuring their correctness and reliability is critical. Despite their importance and widespread use, bugs remain prevalent in browsers such as Google Chrome and Mozilla Firefox, leading to crashes, security vulnerabilities, and degraded user experiences. As browsers continue to evolve, developers have increasingly used \textit{fuzzing}, an automated testing technique that exercises software with large numbers of randomly generated or mutated inputs, to identify and fix these issues.
+\textit{Web browsers}---software that retrieves, interprets, and
+displays web pages---are central to modern computing, with
+browser-based usage corresponding to over \textbf{80\%} of daily work
+in some organizations~\cite{montenegro2025workforce}. As web browsers
+have become the primary interface for accessing the Internet, ensuring
+their correctness and reliability is critical. Browser makers,
+including Mozilla, Google, and Apple, thus put significant resources
+behind fuzzing, audits, and security research aimed at preventing bugs
+in their browsers~\cite{google-project-zero,mozilla-mythos}. Moreover,
+browser developers collaborate on substantial standardization
+efforts~\cite{w3c,whatwg}, share enormous test suites~\cite{wpt}, and
+take part in annual ``Interoperability'' efforts to ensure that
+browsers implement those standards correctly~\cite{interop}.
+In short, browser developers care a lot about correctness.
 
-Fuzzers are typically designed around specific software interfaces, which define how inputs are delivered to a program and how those inputs may exercise buggy behavior. Existing browser fuzzers often rely on differential testing or specialized correctness checks to detect rendering and security bugs. R2Z2 detects rendering regressions by comparing the output of different browser versions~\cite{song2022r2z2}. Metamong detects render-update bugs by comparing browser update behavior against a specialized render-update check~\cite{song2023metamong}. FuzzOrigin targets UXSS vulnerabilities through origin fuzzing~\cite{kim2022fuzzorigin}. However, \textbf{one important browser mechanism remains difficult to test systematically}: \textit{layout invalidation}, which determines which parts of a page must be recomputed after changes to the DOM or CSS.
+Developers increasingly use \textit{fuzzing}, an automated testing
+technique that exercises software with large numbers of randomly
+generated or mutated inputs, to identify and fix such issues. Fuzzers
+have been broadly successful in finding browser bugs as well. R2Z2,
+for example, detects rendering regressions by fuzzing the output of
+different browser versions~\cite{song2022r2z2}. Metamong detects
+render-update bugs by fuzzing browser update behavior against a
+specialized render-update check~\cite{song2023metamong}. FuzzOrigin
+targets UXSS vulnerabilities through origin
+fuzzing~\cite{kim2022fuzzorigin}. However, \textbf{one important
+  browser mechanism remains difficult to test systematically}:
+\textit{layout invalidation}, which determines which parts of a page
+must be recomputed after changes to the DOM or CSS.
 
-Modern browser layout and rendering engines are highly complex and must support an enormous variety of web content, making correctness bugs inevitable. Public browser-engine trackers reveal numerous invalidation failures plaguing engines as widely used as Chromium~\cite{chromium497183437,chromium379886422}, Firefox~\cite{mozilla1452426,mozilla539356}, and WebKit-based browsers such as Safari~\cite{webkit233421,webkit97801}. Unfortunately, existing browser fuzzers target related but different classes of bugs: R2Z2 targets rendering regressions across browser versions~\cite{song2022r2z2}, Metamong targets render-update bugs through a specialized update check~\cite{song2023metamong}, and FuzzOrigin targets origin-related security bugs~\cite{kim2022fuzzorigin}. These approaches find important browser bugs, but they do not directly test whether an incremental layout update matches the browser's own from-scratch layout result. Consequently,\textbf{ web browsers layout under-invalidation remains insufficiently targeted} by existing fuzzing approaches, leaving bugs hidden in today's critical browser rendering engines.
+Unfortunately, layout invalidation is one of the most complex parts of
+a browser to get right. To show a user a web page, the browser goes
+through a ``rendering pipeline'' containing many steps, such as
+parsing, matching, styling, layout, paint, and so on~\cite{wbe}. When
+the user then interacts with the page, or when JavaScript-accessible
+APIs modify it, the browser has to \emph{redo} each of those steps.
+\emph{Invalidation} is the algorithm that reuses as much previous work
+as possible, so that the rendering pipeline can be performed quickly.
+Public browser-engine trackers reveal numerous invalidation failures
+in Chromium~\cite{chromium497183437,chromium379886422},
+Firefox~\cite{mozilla1452426,mozilla539356}, and WebKit-based browsers
+such as Safari~\cite{webkit233421,webkit97801}. Layout engines are
+often specifically designed to minimize invalidation bugs, even at the
+cost of higher memory usage or lower performance. For example,
+Chrome's LayoutNG~\cite{???} uses a functional approach to simplify
+invalidation. Some promising optimizations never ship because it is
+too difficult to ensure they are bug-free, as happened to Mozilla's
+reflow roots optimization~\cite{???}. In other words, invalidation
+correctness is a major bottleneck on browser performance. This makes
+it an especially attractive target for automated testing. However,
+\textbf{web browsers layout under-invalidation remains insufficiently
+  targeted} by existing fuzzing approaches.
 
-To address these challenges and support targeted testing of browser layout invalidation, this paper introduces LayoutQuickCheck: a fuzzer for detecting under-invalidation bugs in modern web browser engines. Unlike browser fuzzers that primarily search for cross-version rendering regressions, LayoutQuickCheck systematically exercises incremental layout behavior by generating DOM and CSS updates that force the browser to recompute affected rendering state. Central to LayoutQuickCheck is a self-comparison strategy: the system compares the browser's incremental layout result against its own from-scratch layout result for the same final page, allowing it to detect under-invalidation bugs without relying on a separate browser implementation. LayoutQuickCheck further uses minimization and clustering techniques to reduce generated failures into smaller, developer-actionable reports.
+To address these challenges and support targeted testing of browser
+layout invalidation, this paper introduces LayoutQuickCheck: a fuzzer
+for detecting under-invalidation bugs in modern web browser engines.
+LayoutQuickCheck systematically exercises incremental layout behavior
+by generating DOM and CSS updates that force the browser to recompute
+affected rendering state. Central to LayoutQuickCheck is a
+\emph{self-comparison strategy}: the system compares the browser's
+incremental layout result against its own from-scratch layout result
+for the same final page, allowing it to detect under-invalidation bugs
+without relying on a separate browser implementation. This ensures
+that false positives are rare, unlike cross-browser or cross-version
+approaches where benign browser differences can swamp the true
+detection rate. LayoutQuickCheck further uses minimization and
+clustering techniques to reduce generated failures into smaller,
+developer-actionable reports.
 
 We implement LayoutQuickCheck as a browser-based fuzzing pipeline and evaluate its effectiveness across modern web browser engines, including Chrome, Firefox, and Safari. We empirically evaluate LayoutQuickCheck through experiments and ablation studies that measure how its input generation, minimization, and clustering components contribute to discovering and triaging under-invalidation bugs. Notably, LayoutQuickCheck reveals XXX previously unknown under-invalidation bugs across XXX browser engines, of which XXX are confirmed or fixed by browser developers. 
 
