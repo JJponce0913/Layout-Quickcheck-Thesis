@@ -103,10 +103,10 @@ Firefox~\cite{mozilla1452426,mozilla539356}, and WebKit-based browsers
 such as Safari~\cite{webkit233421,webkit97801}. Layout engines are
 often specifically designed to minimize invalidation bugs, even at the
 cost of higher memory usage or lower performance. For example,
-Chrome's LayoutNG~\cite{???} uses a functional approach to simplify
+Chrome's LayoutNG~\cite{kilpatrick2021layoutng} uses a functional approach to simplify
 invalidation. Some promising optimizations never ship because it is
 too difficult to ensure they are bug-free, as happened to Mozilla's
-reflow roots optimization~\cite{???}. In other words, invalidation
+reflow roots optimization~\cite{mozilla2006reflow}. In other words, invalidation
 correctness is a major bottleneck on browser performance. This makes
 it an especially attractive target for automated testing. However,
 \textbf{web browsers layout under-invalidation remains insufficiently
