@@ -256,19 +256,20 @@ the sequence of page state, mutation, and layout reuse decisions that exposes th
 issue, the browser may behave differently and the bug may disappear.
 
 The complexity of layout engines also makes bug reports hard to reduce to their root 
-cause. Modern layout behavior involves interacting features, dependency ordering, and 
-incremental schedules that are difficult to reason about manually. 
-Prior work on layout-engine synthesis observes that correct and efficient incremental 
-layout requires reasoning about when recomputation can safely be skipped~\cite{liu2023medea}. 
+cause. Modern layout behavior involves varied features, dependency ordering, and 
+complex interactions that are difficult to reason about manually. 
+So working within certain paramaters within the test generation it is 
+likely that we will trigger the same underlying bug through the generation of different 
+combinations of elements, CSS properties, and mutations.
 As a result, many generated tests can expose the same underlying invalidation mistake 
 through different combinations of elements, CSS properties, and mutations. Conversely, 
 two tests that look similar in their HTML/CSS structure may exercise different layout dependencies.
 
-These challenges make both minimization and deduplication necessary. A useful bug report
-should remove unrelated elements, styles, and mutations while preserving the exact 
-mismatch~\cite{zellerFuzzingBookReducer}. For HTML/CSS tests, reduction also needs 
-to respect document structure so that minimized tests remain valid and 
-meaningful~\cite{misherghi2006hdd,webkitTestCaseReduction}. LayoutQuickCheck 
+These challenges make both minimization and deduplication necessary. Reduction also needs 
+to keep document structure valid so that minimized tests remain
+meaningful~\cite{misherghi2006hdd,webkitTestCaseReduction} in addition to 
+removing unrelated elements, styles, and mutations while preserving the exact 
+information needed for bug reproduction~\cite{zellerFuzzingBookReducer}. LayoutQuickCheck 
 therefore must minimize generated pages and group multiple reports that likely 
 represent the same underlying invalidation failure, so developers are not left 
 triaging many large, redundant HTML/CSS files.
