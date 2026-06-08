@@ -9,7 +9,7 @@ at effectively fuzzing browser layout invalidation.
 \subsection{Challenge 1: Generating Inputs that Trigger Under-Invalidation Bugs}
 
 The first challenge is generating inputs that are both valid web pages
-and useful tests for layout invalidation. A browser fuzzer can easily
+and useful tests for layout invalidation. A browser fuzzer can easily\todo{Ref}
 create HTML and CSS that the browser accepts, but such inputs may never
 exercise the incremental layout paths where under-invalidation bugs
 occur. To expose these bugs, the generated page must include an initial
@@ -22,7 +22,7 @@ behavior.
 
 \textbf{Display}: The \texttt{display} property is a useful target
 because it determines the layout mode used for an element and can also
-change how its children participate in layout. Changing \texttt{display}
+change how its children participate in layout.\todo{Ref?} Changing \texttt{display}
 can move an element between block, inline, flex, grid, table, or hidden
 states, each of which requires different layout behavior. Because these
 changes can affect both the modified element and its descendants, they
@@ -30,7 +30,7 @@ provide strong opportunities to expose missed invalidation decisions.
 
 \textbf{Grid}: Grid layout creates many invalidation opportunities
 because it introduces relationships between a container and
-its children. Changing grid templates, gaps, placement rules, or
+its children.\todo{Ref?} Changing grid templates, gaps, placement rules, or
 auto-flow can reposition multiple children from a single style update.
 This makes grid a strong target for \toolname because a missed
 invalidation can leave incorrects child positions or incorrect container
@@ -60,7 +60,7 @@ reported geometry. \todo{Add more about transforms.}
 \texttt{writing-mode}, \texttt{content-visibility}, padding, and table
 display values because they are less likely to produce
 under-invalidation bugs. Instead, these properties
-often add unnecessary complexity to the generated tests. Removing them 
+often add unnecessary complexity to the generated tests.\todo{Ref?} Removing them 
 keeps the generated tests focused on mutations
 that are more likely to expose missed invalidation decisions and helps
 produce smaller, clearer bug reports.
@@ -74,7 +74,7 @@ that a missed invalidation decision becomes observable.
 \subsection{Challenge 2: Minimizing and Isolating Under-Invalidation Bugs}
 
 Under-invalidation bugs often appear in
-large generated pages that contain many elements, styles, and mutations.
+large generated pages that contain many elements, styles, and mutations.\todo{Ref?}
 Even when only a small part of the page is responsible for the failure,
 the original test case may include many unrelated structures introduced
 by random generation. These large inputs are difficult for developers to
@@ -87,7 +87,7 @@ The browser first lays out the original page, then applies a DOM or CSS
 update, and then decides which cached layout information can be reused.
 If the minimizer removes an element, style, or mutation that seems
 unrelated but changes this invalidation path, the bug may disappear even
-though the original symptom was real.
+though the original conditions were present.
 
 \textbf{Developer-readable isolation}: A useful minimized test case
 should do more than remain reproducible; it should make the likely cause
@@ -103,7 +103,7 @@ a test case that is easier to analyze and debug.
 \subsection{Challenge 3: Grouping and Categorizing Under-Invalidation Bugs}
 
 A major challenge in layout fuzzing is that
-many generated inputs can trigger the same underlying browser bug. Two
+many generated inputs can trigger the same underlying browser bug.\todo{Ref} Two
 test cases may differ slightly in the HTML or CSS while still
 exercising the same missed invalidation decision inside the layout
 engine. Without grouping, developers would need to inspect many
@@ -119,7 +119,7 @@ bugs by their underlying layout pattern rather than by superficial
 differences in generated HTML.
 
 \textbf{Automated categorization}: Categorization is difficult because
-the process must be automated while still avoiding overly broad groups.
+the process must be automated while still avoiding overly broad groups.\todo{Ref?}
 If the grouping rule is too strict, the system leaves many duplicates
 unmerged; if it is too loose, unrelated bugs may be combined into the
 same category. \toolname therefore needs grouping logic that can
