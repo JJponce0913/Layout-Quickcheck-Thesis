@@ -1,0 +1,22 @@
+\begin{abstract}
+Fuzzing for web browsers has traditionally focused on crash testing,
+such as for finding security-relevant bugs in parsers and media
+processing engines, and regression testing, such as for finding
+newly-introduced bugs in rendering code. However, fuzzing has not
+traditionally been used for finding correctness bugs in the
+implementation of the web platform standards, because writing effective
+test oracles for these standards is challenging. We introduce a class of
+correctness bugs that afflict web browser layout engines:
+under-invalidation bugs, which cause browsers to incompletely update
+internal state in response to page updates.
+
+To combat these bugs, we introduce \toolname, a fuzzer for
+finding, minimizing, and clustering under-invalidation bugs.
+\toolname uses the browser as its own oracle, comparing an
+incremental and from-scratch layout of the same web page and flagging
+differences as under-invalidation bugs. \toolname reproduces XXX
+bugs from Chrome and Firefox's public bug trackers and finds XXX novel
+bugs that are reported to and accepted by developers. Moreover,
+\toolname's minimization and clustering tooling reduces large
+generated failures into smaller, developer-actionable reports.
+\end{abstract}

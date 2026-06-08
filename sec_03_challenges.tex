@@ -1,0 +1,140 @@
+\section{CHALLENGES AND SOLUTIONS}
+To address the limitations of conventional browser fuzzing for layout
+invalidation correctness, we introduce \toolname: a system for
+finding, minimizing, and grouping under-invalidation bugs in modern web
+browser layout engines. In the following, we outline core challenges
+that shape \toolname's design, along with their solutions aimed
+at effectively fuzzing browser layout invalidation.
+
+\subsection{Challenge 1: Generating Inputs that Trigger Under-Invalidation Bugs}
+
+The first challenge is generating inputs that are both valid web pages
+and useful tests for layout invalidation. A browser fuzzer can easily
+create HTML and CSS that the browser accepts, but such inputs may never
+exercise the incremental layout paths where under-invalidation bugs
+occur. To expose these bugs, the generated page must include an initial
+layout, a meaningful DOM or CSS update, and a final state where the
+browser should recompute affected geometry. \toolname therefore
+biases generation toward CSS properties and mutations that are likely to
+change layout, so that each test is more likely to trigger the browser's
+invalidation logic rather than only testing parsing or general rendering
+behavior.
+
+\textbf{Display}: The \texttt{display} property is a useful target
+because it determines the layout mode used for an element and can also
+change how its children participate in layout. Changing \texttt{display}
+can move an element between block, inline, flex, grid, table, or hidden
+states, each of which requires different layout behavior. Because these
+changes can affect both the modified element and its descendants, they
+provide strong opportunities to expose missed invalidation decisions.
+
+\textbf{Grid}: Grid layout creates many invalidation opportunities
+because it introduces relationships between a container and
+its children. Changing grid templates, gaps, placement rules, or
+auto-flow can reposition multiple children from a single style update.
+This makes grid a strong target for \toolname because a missed
+invalidation can leave incorrects child positions or incorrect container
+geometry.
+
+\textbf{Flow-root}: The \texttt{display:flow-root} value is important
+because it changes layout boundaries and reflow-root behavior. \todo{Add more about flow-root.}
+
+\textbf{Width and height}: Width and height changes directly affect an
+element's box geometry. When an element changes size, the browser may
+need to recompute that element, its descendants, siblings, and sometimes
+ancestors. These mutations are useful because layout engines often
+appears as an obvious mismatch in element size or position.
+
+\textbf{Percentage and pixel sizes}: Percentage sizes test
+parent-dependent layout behavior because the final size of an element
+depends on its containing block. Pixel sizes create more direct change
+to the geometry possibly causing conflict issues with surrounding 
+elements. Using both lets \toolname exercise
+dependent layout constraints to produce failures that are
+easy to observe and reproduce.
+
+\textbf{Transforms}: Transform changes affect visual position and
+reported geometry. \todo{Add more about transforms.}
+
+\textbf{Noise reduction}: \toolname disables properties such as
+\texttt{writing-mode}, \texttt{content-visibility}, padding, and table
+display values because they are less likely to produce
+under-invalidation bugs. Instead, these properties
+often add unnecessary complexity to the generated tests. Removing them 
+keeps the generated tests focused on mutations
+that are more likely to expose missed invalidation decisions and helps
+produce smaller, clearer bug reports.
+
+\textbf{Solution 1}: \toolname includes a generation strategy for
+steering generated inputs toward page updates that are likely to trigger
+layout under-invalidation bugs. The system focuses on CSS properties and
+mutations that should force layout recomputation, increasing the chance
+that a missed invalidation decision becomes observable.
+
+\subsection{Challenge 2: Minimizing and Isolating Under-Invalidation Bugs}
+
+Under-invalidation bugs often appear in
+large generated pages that contain many elements, styles, and mutations.
+Even when only a small part of the page is responsible for the failure,
+the original test case may include many unrelated structures introduced
+by random generation. These large inputs are difficult for developers to
+inspect and make it hard to identify which DOM structure or CSS change
+actually triggered the stale layout state.
+
+\textbf{Preserving the bug trigger}: Minimization is difficult because
+under-invalidation bugs depend on a precise sequence of layout states.
+The browser first lays out the original page, then applies a DOM or CSS
+update, and then decides which cached layout information can be reused.
+If the minimizer removes an element, style, or mutation that seems
+unrelated but changes this invalidation path, the bug may disappear even
+though the original symptom was real.
+
+\textbf{Developer-readable isolation}: A useful minimized test case
+should do more than remain reproducible; it should make the likely cause
+of the bug easier to understand. \toolname therefore needs to
+remove unrelated elements and styles while preserving the core modified
+properties, affected layout relationships, and observable geometry
+difference that make the bug actionable.
+
+\textbf{Solution 2}: \toolname reduces bug-triggering inputs to their 
+essential elements, isolates the structures that cause the failure, and produces
+a test case that is easier to analyze and debug.
+
+\subsection{Challenge 3: Grouping and Categorizing Under-Invalidation Bugs}
+
+A major challenge in layout fuzzing is that
+many generated inputs can trigger the same underlying browser bug. Two
+test cases may differ slightly in the HTML or CSS while still
+exercising the same missed invalidation decision inside the layout
+engine. Without grouping, developers would need to inspect many
+redundant reports before finding the distinct bugs that actually require
+attention.
+
+\textbf{Structural representation}: Grouping under-invalidation bugs
+requires representing the parts of a test case that matter for the
+failure. The system must capture the DOM structure, base styles,
+modified styles, and the element relationships involved for each
+layout state. A consistent representation makes it possible to compare
+bugs by their underlying layout pattern rather than by superficial
+differences in generated HTML.
+
+\textbf{Automated categorization}: Categorization is difficult because
+the process must be automated while still avoiding overly broad groups.
+If the grouping rule is too strict, the system leaves many duplicates
+unmerged; if it is too loose, unrelated bugs may be combined into the
+same category. \toolname therefore needs grouping logic that can
+recognize repeated bug patterns while preserving enough detail to keep
+distinct failures separate.
+
+\textbf{Developer-focused triage}: The goal of grouping is to reduce the
+amount of manual triage required after fuzzing. Browser developers need
+to see recurring, actionable patterns rather than a long list of similar
+generated files. Categorized reports help developers focus on the likely
+root causes and decide which failures represent unique bugs.
+
+\textbf{Solution 3}: \toolname groups bugs using structural rules
+and merged bug representations. This reduces duplicate reports, keeps
+similar failures together, and lets developers focus on the distinct
+under-invalidation patterns that are most likely to be actionable.
+
+\todo{Where to add that by grouping we can also bypass minimization or is that in implementation?}

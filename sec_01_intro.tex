@@ -1,0 +1,60 @@
+\section{Introduction}
+
+\textit{Web browsers} are central to modern computing, with
+browser-based usage corresponding to over \textbf{80\%} of daily work
+in some organizations~\cite{montenegro2025workforce}. Browser makers
+therefore invest heavily in fuzzing, audits, security research,
+standardization, shared test suites, and interoperability efforts aimed
+at ensuring browser correctness~\cite{google-project-zero,mozilla-mythos,w3c,whatwg,wpt,interop}.
+
+Developers increasingly use \textit{fuzzing}, an automated testing
+technique that exercises software with large numbers of randomly
+generated or mutated inputs, to identify and fix bugs. Browser fuzzers
+have been successful at finding crashes, security vulnerabilities, and
+rendering regressions. R2Z2 detects rendering regressions by fuzzing the
+output of different browser versions~\cite{song2022r2z2}; Metamong
+detects render-update bugs through fuzzing~\cite{song2023metamong}; and
+FuzzOrigin targets UXSS vulnerabilities through origin
+fuzzing~\cite{kim2022fuzzorigin}. However, one important browser
+mechanism remains difficult to test systematically: \textit{layout
+invalidation}, which determines which parts of a page must be
+recomputed after changes to the DOM or CSS.
+
+Layout invalidation is difficult because browsers attempt to reuse as
+much previous work as possible while still ensuring that the final page
+state is correct. The browser rendering pipeline includes parsing,
+style computation, layout, painting, and related stages~\cite{wbe}.
+After a DOM or CSS update, invalidation decides which work can be reused
+and which work must be recomputed. Public browser-engine trackers
+contain invalidation failures in Chromium, Firefox, and WebKit-based
+browsers~\cite{chromium497183437,chromium379886422,mozilla1452426,mozilla539356,webkit233421,webkit97801}.
+Modern layout engines, including Chrome's LayoutNG, are designed in part
+to reduce these correctness bugs~\cite{kilpatrick2021layoutng}, and
+some optimizations have historically stalled because ensuring correct
+invalidation was too difficult~\cite{mozilla2006reflow}.
+
+This paper introduces \toolname, a fuzzer for detecting
+under-invalidation bugs in modern web browser engines.
+\toolname systematically exercises incremental layout behavior
+by generating DOM and CSS updates that should force the browser to
+recompute affected rendering state. Its central strategy is
+self-comparison: the system compares the browser's incremental layout
+result against its own from-scratch layout result for the same final
+page. This allows \toolname to detect stale layout state without
+relying on a separate browser implementation.
+
+This paper makes the following contributions:
+\begin{itemize}
+    \item We describe the challenges of extending fuzzing to browser
+    layout invalidation and explain why existing browser fuzzers do not
+    systematically target under-invalidation bugs.
+    \item We design \toolname, a targeted fuzzer that generates
+    DOM and CSS updates, compares incremental and fresh layout results,
+    and reports stale layout or rendering state.
+    \item We evaluate \toolname through experiments and ablation
+    studies across XXX browser engines, measuring bug discovery,
+    minimization, and clustering effectiveness.
+    \item We release \toolname together with evaluation
+    artifacts, generated test cases, and benchmarks at the following
+    URL: XXX.
+\end{itemize}

@@ -1,0 +1,51 @@
+\section{IMPLEMENTATION}
+
+\toolname is implemented as a Selenium-based fuzzing pipeline that
+generates HTML/CSS test cases, runs them in a target browser, detects
+under-invalidation bugs, and post-processes bug reports.
+
+\subsection{Fuzzing Process Execution}
+\begin{itemize}
+    \item \toolname generates a random DOM tree with base CSS
+    styles and modified CSS styles.
+    \item The generated page is executed in a real browser through
+    Selenium WebDriver.
+    \item The harness compares layout after incremental style changes
+    against layout after a fresh reload to detect under-invalidation
+    bugs.
+\end{itemize}
+
+\subsection{Test Case Mutation and Trimming}
+\begin{itemize}
+    \item When a bug is found, \toolname repeatedly applies
+    minimization steps and keeps only changes that still reproduce the
+    bug.
+    \item The minimizer removes unnecessary elements, CSS rules, and
+    style changes from the generated test case.
+    \item \texttt{Minify\_MoveStyleChangeToFirstLoad} moves nonessential
+    modified styles into the base styles, leaving the modified styles
+    most critical to reproducing the bug.
+    \item The final minimized page is saved with metadata describing the
+    affected styles and layout differences.
+\end{itemize}
+
+\subsection{Bug Categorization and Deduplication}
+\begin{itemize}
+    \item \toolname converts minimized bugs into structural
+    representations that include the DOM tree, base styles, and modified
+    styles.
+    \item The system compares new bugs against existing bug groups to
+    identify repeated instances of the same underlying issue.
+    \item Matching bugs are placed into existing groups, while new
+    patterns can form new bug groups with generated rules.
+\end{itemize}
+
+\subsection{Supported Software and Browser Platforms}
+\begin{itemize}
+    \item \toolname supports browser testing through Selenium
+    variants for Chrome, Firefox, and Safari.
+    \item Browser variants can be configured with custom binaries,
+    WebDriver paths, viewport sizes, and headless execution.
+    \item Bug reports are grouped using structural rules so repeated
+    instances of the same underlying bug can be categorized together.
+\end{itemize}

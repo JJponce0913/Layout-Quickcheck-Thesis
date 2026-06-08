@@ -1,0 +1,129 @@
+%----------------------------------------------------------
+% Paper-specific Macros
+%----------------------------------------------------------
+\newcommand{\toolname}{\textsc{LayoutQuickCheck}\xspace}
+\newcommand{\toolnameit}{\emph{\textsc{LayoutQuickCheck}}\xspace}
+\newcommand{\lqc}{\toolname}
+
+% Subject/domain macros.
+\newcommand{\UnderInvalidation}{under-invalidation\xspace}
+\newcommand{\LayoutInvalidation}{layout invalidation\xspace}
+\newcommand{\IncrementalLayout}{incremental layout\xspace}
+\newcommand{\FreshLayout}{fresh layout\xspace}
+\newcommand{\BrowserEngines}{browser layout engines\xspace}
+
+%----------------------------------------------------------
+% Editing Macros
+%----------------------------------------------------------
+% \[your initials]{}: macro for inlined comments
+\newcommand{\sn}[1]{\textbf{\color{blue}[ SN: #1]}}
+\newcommand{\zy}[1]{\textbf{\color{magenta}[ ZY: #1]}}
+
+% \eat{}, \done{}, & \todo{}: macros for marking paper edits
+\newcommand{\eat}[1]{}
+\newcommand{\done}[1]{\textbf{\color{teal}[ CHANGED: #1]}}
+\newcommand{\todo}[1]{\textbf{\color{red}[ TODO: #1]}}
+
+%----------------------------------------------------------
+% Symbol Macros
+%----------------------------------------------------------
+% \ymark & \xmark: macros for check- and x-marks
+\newcommand{\ymark}{\ding{52}}
+\newcommand{\xmark}{\ding{55}}
+
+% \cymark & \cxmark: same as above but colored
+\newcommand{\cymark}{\color{tabgreen}{\ding{52}}\color{black}}
+\newcommand{\cxmark}{\color{tabred}{\ding{55}}\color{black}}
+
+% colored thumbs down
+\newcommand{\cthumbsdown}{\color{orange}{\faThumbsODown}\color{black}}
+
+% fancy triangles
+\newcommand{\mwubetter}{$\color{green}\blacktriangledown$}
+\newcommand{\mwuworse}{$\color{winered}\blacktriangledown$}
+
+% Other symbols
+\newcommand{\cconfd}{\color{am-blue}{\faThumbsUp}\color{black}}
+\newcommand{\cwaiting}{\color{gray!65}{\faHourglass[2]}\color{black}}
+\newcommand{\cfixed}{\color{tabgreen}{\faLock}\color{black}}
+
+
+%----------------------------------------------------------
+% Color Macros
+%----------------------------------------------------------
+% light grey color (great for for table row shading)
+\definecolor{light-gray}{gray}{0.92}
+\definecolor{tabred}{RGB}{230,36,0}%
+\definecolor{tabgreen}{RGB}{0,116,21}%
+\definecolor{taborange}{RGB}{255,127,80}%
+\definecolor{deepcarrotorange}{rgb}{0.91, 0.41, 0.17}
+\definecolor{winered}{rgb}{0.5,0,0}
+\definecolor{c1}{HTML}{D81B60}
+\definecolor{c2}{HTML}{1E88E5}
+\definecolor{c3}{HTML}{004D40}
+\definecolor{c4}{HTML}{FE6100}
+
+%----------------------------------------------------------
+% Code Listing Macros
+%----------------------------------------------------------
+% \callout{}: macro for callout box (e.g., \callout{Impetus:...}).
+\NewDocumentCommand{\callout}{O{}m+m}{%
+  \begin{tcolorbox}[%
+    rounded corners,
+    colframe=gray!50, 
+    boxsep = 0pt,
+    left = 7pt,
+    right = 7pt,
+    top = 5pt,
+    bottom = 5pt,
+    %width = 2pt,
+    colback=gray!7, 
+    box align=center,
+    %halign=center,
+    valign=center,
+    title = {},#1]
+    %title = {\centering\makebox[\linewidth][c]{#2}},#1]
+    #3%
+    \end{tcolorbox}%
+}
+
+%----------------------------------------------------------
+% Code Listing Macros
+%----------------------------------------------------------
+% \code{}: macro for inlined code font (e.g., \code{gcc}).
+\newcommand{\code}[1]{{\fontfamily{lmtt}\selectfont{#1}}}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{am-green}{HTML}{1FCA23}
+\definecolor{am-pink}{HTML}{FD42FC}
+\definecolor{am-blue}{HTML}{1683FB}
+\definecolor{cadmiumgreen}{rgb}{0.0, 0.42, 0.24}
+\colorlet{mgray}{gray!90!black}
+
+\lstset{
+	frame			= tb,
+	aboveskip		= 2mm,
+	belowskip		= 2mm,
+	showstringspaces = false,
+	showtabs		= false, % show tabs within strings adding particular
+	columns			= flexible,
+	%basicstyle		= {\scriptsize\lmttfamily},
+    % basicstyle=\fontencoding{T1}\scriptsize\fontfamily{lmtt}\selectfont,
+    basicstyle=\fontencoding{T1}\scriptsize\fontfamily{lmtt}\selectfont,
+	numbers			= left,
+	stepnumber		= 1, % the step between two line-numbers
+	numbersep		= 0.25em, % how far the line-numbers are from the code     
+	numberstyle		= \scriptsize\color{cyan},
+	keywordstyle	= \color{cadmiumgreen},
+	commentstyle	= \color{mgray},
+	stringstyle		= \color{violet},
+	breaklines		= true,
+	breakatwhitespace = true,
+	tabsize			= 3,
+	captionpos		= b, % sets the caption-position to bottom
+	breaklines		= true, % sets automatic line breaking
+	breakatwhitespace = true, % sets if automatic breaks should only happen
+    xleftmargin=0.5em,
+}
