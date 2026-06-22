@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<style>
+pre{
+  background: aqua;
+  letter-spacing: 1em;
+  display: inline;
+}
+</style>
+<script>
+  function addRemoveWidth() {
+    toggleMe.style.width = '50px';
+    toggleMe.offsetHeight; // flush layout
+    toggleMe.style.width = ''
+  }
+</script>
+<button onclick="addRemoveWidth()">
+  Click to make & remove a temporary style change
+</button>
+<br>
+<pre id="toggleMe">11
+22
+33</pre>

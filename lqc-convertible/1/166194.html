@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it">
+<head>
+<title>Testcase, bug 166194</title>
+<style type="text/css">
+    * { margin: 0; padding: 0; border: none; }
+    #submenu { margin-bottom: 10em; display: none; }
+    .item { clear: both; }
+    .action { float: left; }
+</style>
+<script type="text/javascript">
+
+function toggle()
+{
+    var s = document.getElementById("submenu").style;
+    if (s.display != "inline-block")
+        s.display = "inline-block";
+    else
+        s.display = "none";
+}
+
+</script>
+</head>
+<body>
+
+  <div class="item">
+    <span class="action" onclick="toggle();">click here to toggle</span>
+    <div id="submenu">
+      <div class="item">
+        <span class="action">B</span>
+      </div>
+    </div>
+  </div>
+  <div class="item">C</div>
+
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<body style="height:250px">
+	<div style="float:left">First float</div>
+	<div id="resizeMe" style="float:left;width:100%">Second float</div>
+	<div>
+		<div style="float:left;margin-top:1px">Third float, which should bounce up and down every 200ms</div>
+	</div>
+<script>
+function makeStyleChanges() {
+	var resizeMe = document.getElementById("resizeMe");
+	resizeMe.style.height = "100px";
+}
+</script>
+<script src="debugging_tools.js"></script>
+</body>
+</html>

@@ -14,9 +14,41 @@ To combat these bugs, we introduce \toolname, a fuzzer for
 finding, minimizing, and clustering under-invalidation bugs.
 \toolname uses the browser as its own oracle, comparing an
 incremental and from-scratch layout of the same web page and flagging
-differences as under-invalidation bugs. \toolname reproduces XXX
+differences as under-invalidation bugs. The fuzzer generates separate
+initial and modified CSS states, allowing it to test whether a DOM or CSS
+update leaves stale layout geometry after the browser recomputes the layout.
+Unlike cross-browser or cross-version comparison, this self-comparison
+does not require a second implementation to determine the correct result.
+\toolname reproduces XXX
 bugs from Chrome and Firefox's public bug trackers and finds XXX novel
 bugs that are reported to and accepted by developers. Moreover,
 \toolname's minimization and clustering tooling reduces large
-generated failures into smaller, developer-actionable reports.
+generated failures into smaller, developer-actionable reports. It preserves
+the state transition required to trigger a failure and groups structurally
+similar reports, reducing redundant developer triage.
 \end{abstract}
+  \begin{itemize}
+\item \textbf{Chrome}
+\begin{itemize}
+\item 1137427 - fixed
+\item 1166887 - fixed
+\item 1189755 - fixed
+\item 1189762 - Removed the bug from the Available Hotlist Aug 21, 2025
+\item 1190220 - Fixed (Verified)
+\item 1219641 - Removed the bug from the Available Hotlist Sep 17, 2025
+\item 1224721 - fixed
+\item 1229681 - Removed the bug from the Available Hotlist Oct 10, 2025
+\end{itemize}
+
+\item \textbf{Firefox}
+\begin{itemize}
+\item 1721719 - open
+\item 1724982 - open
+\item 1724991 - open
+\item 1733276 - open
+\item 1735376 - closed
+\item 1735931 - closed
+\item 1748891 - open
+\item Metabug 1724999 - open
+\end{itemize}
+\end{itemize}

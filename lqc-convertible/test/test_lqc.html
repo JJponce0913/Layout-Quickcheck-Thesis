@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<style>
+	td {
+		width: 100px;
+		height: 100%;
+		background-color: wheat;
+	}
+
+	#element {
+		display: block;
+		height: 100%;
+		background-color: skyblue;
+	}
+</style>
+<table>
+	<tr>
+		<td>
+			<div id="element">element</div>
+		</td>
+		<td>
+			a<br/>
+			b<br/>
+			c
+		</td>
+	</tr>
+</table>
+<script>
+	function toggleelementDisplay() {
+		let element = document.getElementById('element');
+		element.style.display = element.style.display === 'table' ? 'block' : 'table';
+	}
+	function makeStyleChanges() { toggleelementDisplay(); }
+</script>
+<script src="debugging_tools.js"></script>
+<button onclick="toggleelementDisplay()">Toggle element display</button>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Layout QuickCheck - bug 166194</title>
+    <script>
+      function printDimensions(nodeOrId, fields) {
+          const node = typeof nodeOrId === "string"
+              ? document.getElementById(nodeOrId)
+              : nodeOrId;
+          const dims = node.getBoundingClientRect();
+          console.log("#" + node.id, Object.fromEntries(fields.map((x) => [x, dims[x]])));
+      }
+
+      function makeStyleChanges() {
+          cpxamiddleblockqfowzz.style["display"] = "inline-block";
+      }
+
+      function fromScratchLayout() {
+          document.documentElement.innerHTML = document.documentElement.innerHTML;
+      }
+
+      function simpleRecreate() {
+          console.log("Make changes and perform incremental layout");
+          makeStyleChanges();
+          printDimensions("cpxamiddleblockqfowzz", ["x", "y", "left", "right", "top", "bottom", "width", "height"]);
+          printDimensions("cpxaafterblockqfowzz", ["x", "y", "left", "right", "top", "bottom", "width", "height"]);
+
+          console.log("Perform from scratch layout, below values should differ from above if this reproduces");
+          fromScratchLayout();
+          printDimensions("cpxamiddleblockqfowzz", ["x", "y", "left", "right", "top", "bottom", "width", "height"]);
+          printDimensions("cpxaafterblockqfowzz", ["x", "y", "left", "right", "top", "bottom", "width", "height"]);
+      }
+
+    </script>
+
+    <!-- For a minimal version of this bug, remove all optional JS Files -->
+    <!-- Start: Optional JS Files -->
+    <script src="debugging_tools.js"></script>
+    <!-- End: Optional JS Files -->
+  </head>
+
+  <body>
+    <div style="clear:both" id="cpxaouteritemqfowzz">
+      <span style="float:left" id="cpxaactionqfowzz">click here to toggle</span>
+      <div style="margin-bottom:10em;display:none" id="cpxamiddleblockqfowzz">
+        <div style="clear:both" id="cpxainneritemqfowzz">
+          <span style="float:left" id="cpxainneractionqfowzz">B</span>
+        </div>
+      </div>
+    </div>
+    <div style="clear:both" id="cpxaafterblockqfowzz">C</div>
+  </body>
+
+</html>

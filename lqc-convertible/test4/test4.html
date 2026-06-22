@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { margin: 0; }
+
+#abspos {
+  position: absolute;
+  background: lightblue;
+}
+#mySpan {
+  position: relative;
+  border: 1px solid black;
+}
+</style>
+<script>
+  function tweak() {
+    var span = document.getElementById("mySpan");
+    span.style.verticalAlign = "top";
+  }
+</script>
+
+</head>
+<body onload="setTimeout(tweak, 200);">
+  <span style="font-size:50px">Large Text</span>
+  <span id="mySpan"><div id="abspos">Abspos_Element</div></span>
+</body>
+</html>

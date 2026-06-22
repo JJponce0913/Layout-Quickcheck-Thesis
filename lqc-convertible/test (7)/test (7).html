@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <style>
+  .multicol {
+    column-count: 4;
+    column-gap: 0;
+    column-fill: auto;
+    background: red;
+    width: 100px;
+    height: 100px;
+  }
+
+  .multicol > div {
+    background: green;
+  }
+
+  .flexbox {
+    display: flex;
+    flex-direction: column;
+    height: 340px;
+    border: 5px solid green;
+    justify-content: end;
+  }
+  #mytarget { background: blue }
+  .flexbox > div {
+    contain: size;
+    width: 15px;
+    height: 50px;
+  }
+  </style>
+  <script>
+    function go() {
+      mytarget.style.height = "900px";
+    }
+  </script>
+  <body onload="setTimeout(go, 500)">
+    <div class="multicol">
+      <!-- This div makes the flexbox not at the top of first column. -->
+      <div style="width: 50px; height: 50px;"></div>
+
+      <div class="flexbox">
+        <div></div>
+        <div id="mytarget"></div>
+      </div>
+    </div>
+  </body>
+</html>

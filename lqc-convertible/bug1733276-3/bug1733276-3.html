@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<script>
+    function go() {
+        document.getElementById("test").style.display = "inline";
+    }
+</script>
+<style>
+    .container {
+        /* this is just to serve as a containing block that the margin
+         will definitely overflow out of. */
+        width: 100px;
+        border: 1px solid black;
+    }
+
+    #test {
+        font-family: fantasy;
+        padding-left: 150px;
+        display: none;
+        /* The bug also reproduces if you have 'display:block' here (or probably
+         anything non-'inline').*/
+    }
+</style>
+<body onload="setTimeout('go()', 0)">
+    <div class="container">
+        a b
+        <div id="test">
+            </span>
+        </div>

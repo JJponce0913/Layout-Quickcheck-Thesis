@@ -1,0 +1,33 @@
+<html>
+<head>
+	<title>Overflow and Moving Content Bug</title>
+	<script type="text/javascript">
+		var pos = 0;
+		var poslist = new Array(100, 100, 200, 200, 300, 100, 200, 0);
+		function MoveIt() {
+			var temp = document.getElementById('AbsoluteContent');
+			temp.style.left = poslist[pos << 1] + 'px';
+			temp.style.top = poslist[(pos << 1) + 1] + 'px';
+			pos = (pos + 1) & 0x03;
+		}
+	</script>
+</head>
+<body>
+	<div id="AbsoluteContent"
+		style="position: absolute; left: 200px; top: 0px; width: 200px; height: 200px; border: 1px #000000 solid; overflow: hidden;">
+		<div id="Inner1" style="width: 200px; height: 200px;">
+			<div id="Inner2" style="width: 200px; height: 1000px; background-color: #0000FF; overflow: auto;"></div>
+		</div>
+	</div>
+
+	<div style="padding-top: 250px;">
+		This is text below the main content.<br />
+		<hr />
+		Simply ignore it for the most part<br />
+		<hr />
+		Notice the &lt;hr /&gt;s. The floating region will pick them up on move.<br />
+		<hr />
+		<a href="javascript: MoveIt();">Click here to move the box</a>
+	</div>
+</body>
+</html>

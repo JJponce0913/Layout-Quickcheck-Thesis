@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    #scrollArea {
+      width: 200px;
+      height: 200px;
+      background: lightblue;
+      overflow: scroll;
+      margin: 100px;
+    }
+
+    #abspos {
+      position: absolute;
+      width: 150px;
+      border: 1px solid black;
+    }
+    #extralarge {
+      height: 250px;
+      width: 250px;
+    }
+  </style>
+  <script>
+    function makeStyleChanges() {
+      var scrollArea = document.getElementById("scrollArea");
+      scrollArea.scrollTop = 50;
+      scrollArea.scrollLeft = 50;
+      scrollArea.style.width = "220px";
+    }
+  </script>
+</head>
+<script src="debugging_tools.js"></script>
+<body>
+  <div id="scrollArea">
+    <div id="abspos">I should stay in blue area</div>
+    <div id="extralarge"></div>

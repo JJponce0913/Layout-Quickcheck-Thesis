@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Layout QuickCheck</title>
+    <!-- helpers.js and bootstrap.js can be used by testing frameworks (ie grizzly) -->
+    <script src="helpers.js"></script>
+    <script src="bootstrap.js"></script>
+    <script>
+      function simpleRecreate() {
+        // Make the style changes
+        var five = document.getElementById("five");
+        if (five) {
+          five.style["display"] = "grid";
+        }
+        
+        // Get the dimensions
+        console.log("Height after style changes, before reload");
+        console.log("#two", document.getElementById("two").getBoundingClientRect().height);
+        
+        // Reload the elements
+        document.documentElement.innerHTML = document.documentElement.innerHTML;
+      
+        // Get the dimensions again
+        console.log("Height after reload");
+        console.log("#two", document.getElementById("two").getBoundingClientRect().height);
+        
+      }
+    </script>
+  </head>
+
+  <body>
+    
+    <div style="display:table-column;grid-auto-columns:20px;margin-block-start:+186vw;min-width:50px;min-height:50px;background-color:red" id="five">
+      Quisquam dolor non velit numquam.
+      <div style="min-width:50px;min-height:50px;background-color:red" id="three">
+        
+      </div>
+      
+      <div style="display:table;min-width:50px;min-height:50px;background-color:yellow" id="four">
+        
+        <div style="display:table-row;min-width:50px;min-height:50px;background-color:orange" id="two">
+          
+        </div>
+        
+      </div>
+      
+      <div style="grid-column-end:span 9;min-width:50px;min-height:50px;background-color:red" id="one">
+        Dolor sed modi eius adipisci.
+      </div>
+      
+    </div>
+    
+  </body>
+
+</html>
