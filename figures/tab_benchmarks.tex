@@ -1,0 +1,28 @@
+\begin{table}[h!]
+    %\framebox(250,150){\todo{Finish!}}
+    \centering
+
+    \renewcommand*{\arraystretch}{1.25}%
+
+    \setlength\tabcolsep{5pt}
+    \begin{tabular}{l | ll}
+        \specialrule{.1em}{0em}{0em}
+        \bfseries Browser & \bfseries Rendering Engine & \bfseries Driver \\
+        \hline
+        Chrome
+            & \textcolor{am-blue}{Blink}
+            & ChromeDriver \\
+        Firefox
+            & \textcolor{tabgreen}{Gecko}
+            & GeckoDriver \\
+        Safari
+            & \textcolor{mauve}{WebKit}
+            & SafariDriver \\
+
+        \hline
+    \end{tabular}
+
+    \vspace{0.5em}
+    \caption{Our browser-based layout fuzzing evaluation benchmarks.}
+    \label{tab:benchmarks}
+\end{table}

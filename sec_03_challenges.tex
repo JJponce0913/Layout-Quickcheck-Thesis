@@ -89,13 +89,6 @@ If the minimizer removes an element, style, or mutation that seems
 unrelated but changes this invalidation path, the bug may disappear even
 though the original conditions were present.
 
-\textbf{Developer-readable isolation}: A useful minimized test case
-should do more than remain reproducible; it should make the likely cause
-of the bug easier to understand. \toolname therefore needs to
-remove unrelated elements and styles while preserving the core modified
-properties, affected layout relationships, and observable geometry
-difference that make the bug actionable.
-
 \textbf{Solution 2}: \toolname reduces bug-triggering inputs to their 
 essential elements, isolates the structures that cause the failure, and produces
 a test case that is easier to analyze and debug.
