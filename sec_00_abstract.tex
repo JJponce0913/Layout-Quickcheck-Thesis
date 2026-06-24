@@ -1,3 +1,4 @@
+
 \begin{abstract}
 Fuzzing for web browsers has traditionally focused on crash testing,
 such as for finding security-relevant bugs in parsers and media
@@ -19,14 +20,10 @@ initial and modified CSS states, allowing it to test whether a DOM or CSS
 update leaves stale layout geometry after the browser recomputes the layout.
 Unlike cross-browser or cross-version comparison, this self-comparison
 does not require a second implementation to determine the correct result.
-\toolname reproduces XXX
-bugs from Chrome and Firefox's public bug trackers and finds XXX novel
-bugs that are reported to and accepted by developers. Moreover,
-\toolname's minimization and clustering tooling reduces large
-generated failures into smaller, developer-actionable reports. It preserves
-the state transition required to trigger a failure and groups structurally
-similar reports, reducing redundant developer triage.
+
+In our evaluation, \toolname is able to test hundreds of fuzzer candidates per minute in both Chrome and Firefox. In both browsers, it finds dozens of bug candidates (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox), with \toolname's custom weights further increasing the bug-discovery rate. Furthermore, \toolname's bug minimization and clustering reduce the volume of bugs that developers must examine, from \VolumePlain without either feature to \VolumenMin with minimization and \VolumeMinClust with both minimization and clustering. Despite this, these features require only \RuntimePercentMinClust\ percent of the runtime. Finally, we show that \toolname can reproduce \MozillaBugs human-submitted bugs mined from the Mozilla bug tracker and find \NumBugsNovel novel bugs that were reported to and accepted by developers, \NumBugsFixed of which were fixed by developers.
 \end{abstract}
+
   \begin{itemize}
 \item \textbf{Chrome}
 \begin{itemize}
