@@ -6,7 +6,7 @@ browser layout engines. In the following, we outline core challenges
 that shape \toolname's design, along with their solutions aimed
 at effectively fuzzing browser layout invalidation.
 
-Existing browser fuzzers do not provide this combination of a targeted
+Existing browser fuzzers do solve this problem of a targeted
 state transition and a same-browser correctness oracle. JavaScript,
 WebGL, WebAssembly, and origin fuzzers focus on different execution
 surfaces and usually use crashes, security violations, or API failures as
@@ -16,19 +16,17 @@ browsers, or executions~\cite{song2022r2z2,song2023metamong,zhou2025janus}.
 Those techniques can reveal valuable regressions, but 
 not identify whether an incremental layout result is stale.
 
-\subsection{Challenge 1: Generating Inputs that Trigger Under-Invalidation Bugs}
+\subsection{Challenge 1: Triggering Under-Invalidation Behavior}
 
-The first challenge is generating inputs that are both valid web pages
-and useful tests for layout invalidation. A browser fuzzer can easily
-create HTML and CSS that the browser accepts, but such inputs may never
-exercise the incremental layout paths where under-invalidation bugs
-occur. To expose these bugs, the generated page must include an initial
-layout, a meaningful DOM or CSS update, and a final state where the
-browser should recompute affected geometry. \toolname therefore
+Valid HTML and CSS are not necessarily useful for testing layout
+invalidation.  Under-invalidation occurs only when a page first establishes a
+layout state, then receives a meaningful DOM or CSS update, and the browser
+fails to recompute geometry affected by that update.  An unconstrained fuzzer
+can produce many accepted pages without exercising these incremental-layout
+paths. \toolname therefore
 biases generation toward CSS properties and mutations that are likely to
 change layout, so that each test is more likely to trigger the browser's
-invalidation logic rather than only testing parsing or general rendering
-behavior. This is deliberately narrower than render-tree mutation and
+invalidation logic. This is deliberately narrower than render-tree mutation and
 cross-rendering approaches, which do not use the incremental-versus-fresh
 layout transition as their test oracle~\cite{zeng2026rtfuzz,song2022r2z2,song2023metamong,zhou2025janus}.
 
@@ -96,20 +94,12 @@ layout under-invalidation bugs. The system focuses on CSS properties and
 mutations that should force layout recomputation, increasing the chance
 that a missed invalidation decision becomes observable.
 
-\subsection{Challenge 2: Minimizing and Isolating Under-Invalidation Bugs}
+\subsection{Challenge 2: Reducing Report Complexity}
 
-Under-invalidation bugs appear in
-large generated pages that contain many elements, styles, and mutations.
-Even when only a small part of the page is responsible for the failure,
-the original test case may include many unrelated structures introduced
-by random generation. Such inputs are not useful for diagnosis because
-they obscure the DOM structure or CSS change that triggered the stale
-layout state.
-
-This differs from reducing a conventional crash or a cross-browser output
-discrepancy: the reducer must preserve not only a failing final page but
-also the particular incremental state transition that exposes the stale
-result~\cite{zellerFuzzingBookReducer,misherghi2006hdd,webkitTestCaseReduction}.
+Generated pages can contain many unrelated elements, declarations, and
+mutations.  Likely only a small portion of the page causes a bug thus the
+original report may obscure the relevant DOM structure and CSS transition.
+The output can also contain many reports that are syntactically different but match a previously observed pattern.  Without reduction and grouping, developers must repeatedly inspect large, redundant reports.
 
 \textbf{Preserving the bug trigger}: Minimization is difficult because
 under-invalidation bugs depend on a precise sequence of layout states.
@@ -127,54 +117,47 @@ be removed from the modified state. If the mismatch disappears, the
 declaration remains modified because changing it after the initial layout is
 part of the bug trigger.
 
-\textbf{Solution 2}: \toolname reduces bug-triggering inputs to their 
-essential elements, isolates the structures that cause the failure, and produces
-a test case that is easier to analyze and debug. Its reduction predicate is
-the same-browser incremental-versus-fresh geometry mismatch.
 
-\subsection{Challenge 3: Grouping and Categorizing Under-Invalidation Bugs}
+\textbf{Avoiding redundancy}: In addition full minimization requires many browser
+executions.  Before minimizing a new report, \toolname can compare it with
+existing structural group rules.  If it matches a group, then the system can assume that there is a common pattern and can retain
+the shared rule and minimized representative rather than fully minimizing an
+additional variation.  Unmatched reports are minimized and can establish new
+groups.
 
-A major challenge in layout fuzzing is that
-many generated inputs can trigger the same underlying browser bug. Two
-test cases may differ slightly in the HTML or CSS while still
-exercising the same missed invalidation decision inside the layout
-engine. Without grouping, developers would need to inspect many
-redundant reports before finding the distinct bugs that actually require
-attention.
+\textbf{Solution 2}: \toolname minimizes reports while preserving the
+state transition that exposes the bug, then groups structurally equivalent
+reports around a shared representative.  This reduces the HTML and CSS a
+developer must inspect and avoids spending full minimization cost on reports
+already represented by a group.
 
-Prior rendering fuzzers can produce many distinct-looking test cases from
-their mutation and comparison strategies, but their output comparisons do
-not identify the shared invalidation structure inside one layout
-engine~\cite{song2022r2z2,song2023metamong,zhou2025janus}. Consequently,
-deduplication for this bug class must retain the DOM and style transition,
-rather than grouping only by a rendered image or a failure signal.
+\subsection{Challenge 3: Establishing Real, Novel Under-Invalidation Bugs}
 
-\textbf{Structural representation}: Grouping under-invalidation bugs
-requires representing the parts of a test case that matter for the
-failure. The system must capture the DOM structure, base styles,
-modified styles, and the element relationships involved for each
-layout state. A consistent representation makes it possible to compare
-bugs by their underlying layout pattern rather than by superficial
-differences in generated HTML.
+A generated report is not automatically evidence of a real or distinct
+browser defect. As mentioned, fuzzers commonly generate many HTML and CSS
+variations that exercise the same underlying defect.  Treating every report
+as a new bug would overstate the diversity of the findings, while merging
+reports too aggressively could hide genuinely different bugs.
 
-\textbf{Automated categorization}: Categorization is difficult because
-the process must be automated while still avoiding overly broad groups.
-If the grouping rule is too strict, the system leaves many duplicates
-unmerged; if it is too loose, unrelated bugs may be combined into the
-same category. \toolname therefore needs grouping logic that can
-recognize repeated bug patterns while preserving enough detail to keep
-distinct failures separate.
+\textbf{Submitting real bugs to browsers}: Even a reproducible mismatch is
+not sufficient to establish novelty.  The behavior may be known, intentional,
+or caused by an error in the test.  A report must therefore be understandable
+enough for browser developers to evaluate, and it must clearly show the
+expected fresh-layout result and the stale incremental result.  Browser
+developer review of submitted, minimized reproducers provides the external
+evidence that a candidate corresponds to a real and novel defect.
 
-\textbf{Skipping minimization}: Full minimization repeatedly
-executes a candidate in the browser and is expensive when a newly detected
-failure already matches a known under-invalidation pattern. \toolname first
-compares a candidate with existing structural group rules. If the candidate
-matches a group, the system saves it as another instance of that group and
-skips full minimization. The minimized representative and shared rule already
-provide the information needed for triage; unmatched candidates are still
-minimized before they are saved or used to form a new group.
+\textbf{Separating repeated reports from distinct candidates}: To determine
+whether reports represent recurring behavior or potentially new bugs,
+\toolname records the DOM structure, base styles, modified styles, and
+affected element relationships.  It uses this representation to group reports
+that match an existing structural rule, while preserving unmatched reports as
+separate candidates.  The resulting groups are evidence of recurring
+patterns, not proof of a shared root cause; similarly, unmatched reports are
+candidates for separate validation rather than confirmed bugs.
 
-\textbf{Solution 3}: \toolname groups bugs using structural rules
-and merged bug representations. This reduces duplicate reports, keeps
-similar failures together, and lets developers focus on the distinct
-under-invalidation patterns that are most likely to be actionable.
+\textbf{Solution 3}: \toolname combines a same-browser,
+incremental-versus-fresh geometry oracle with structural grouping.  This
+produces reproducible reports, distinguishes repeated variants from
+potentially distinct candidates, and leaves final novelty confirmation to
+browser-developer review.
