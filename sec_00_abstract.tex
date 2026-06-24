@@ -21,31 +21,5 @@ update leaves stale layout geometry after the browser recomputes the layout.
 Unlike cross-browser or cross-version comparison, this self-comparison
 does not require a second implementation to determine the correct result.
 
-In our evaluation, \toolname is able to test hundreds of fuzzer candidates per minute in both Chrome and Firefox. In both browsers, it finds dozens of bug candidates (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox), with \toolname's custom weights further increasing the bug-discovery rate. Furthermore, \toolname's bug minimization and clustering reduce the volume of bugs that developers must examine, from \VolumePlain without either feature to \VolumenMin with minimization and \VolumeMinClust with both minimization and clustering. Despite this, these features require only \RuntimePercentMinClust\ percent of the runtime. Finally, we show that \toolname can reproduce \MozillaBugs human-submitted bugs mined from the Mozilla bug tracker and find \NumBugsNovel novel bugs that were reported to and accepted by developers, \NumBugsFixed of which were fixed by developers.
+In our evaluation, \toolname is able to test hundreds of fuzzer candidates per minute in both Chrome and Firefox. In both browsers, it finds dozens of bug candidates (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox), with \toolname's custom weights further increasing the bug-discovery rate. Furthermore, across grouped Firefox reports, bug minimization reduces the number of style elements by \StyleElementOriginalToMinimizedReduction, while clustering reduces it by \StyleElementOriginalToClusteredReduction\ relative to original reports and \StyleElementMinimizedToClusteredReduction\ relative to minimized reports. Despite this, these features require only \RuntimePercentMinClust\ percent of the runtime. Finally, we show that \toolname can reproduce \MozillaBugs human-submitted bugs mined from the Mozilla bug tracker and find \NumBugsNovel novel bugs that were reported to and accepted by developers, \NumBugsFixed of which were fixed by developers.
 \end{abstract}
-
-  \begin{itemize}
-\item \textbf{Chrome}
-\begin{itemize}
-\item 1137427 - fixed
-\item 1166887 - fixed
-\item 1189755 - fixed
-\item 1189762 - Removed the bug from the Available Hotlist Aug 21, 2025
-\item 1190220 - Fixed (Verified)
-\item 1219641 - Removed the bug from the Available Hotlist Sep 17, 2025
-\item 1224721 - fixed
-\item 1229681 - Removed the bug from the Available Hotlist Oct 10, 2025
-\end{itemize}
-
-\item \textbf{Firefox}
-\begin{itemize}
-\item 1721719 - open
-\item 1724982 - open
-\item 1724991 - open
-\item 1733276 - open
-\item 1735376 - closed
-\item 1735931 - closed
-\item 1748891 - open
-\item Metabug 1724999 - open
-\end{itemize}
-\end{itemize}
