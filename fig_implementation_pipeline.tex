@@ -1,0 +1,44 @@
+\begin{figure*}[t]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        >=stealth,
+        stage/.style={draw, rounded corners=2pt, align=center, minimum height=1.25cm,
+            text width=2.9cm, font=\scriptsize, fill=blue!5},
+        process/.style={draw, rounded corners=2pt, align=center, minimum height=1.25cm,
+            text width=3.1cm, font=\scriptsize, fill=green!7},
+        decision/.style={draw, diamond, aspect=1.45, align=center, inner sep=1pt,
+            font=\scriptsize, fill=orange!12},
+        output/.style={draw, rounded corners=2pt, align=center, minimum height=1.1cm,
+            text width=3.0cm, font=\scriptsize, fill=gray!12},
+        flow/.style={->, thick},
+        optional/.style={->, thick, dashed}
+    ]
+        \node[stage] (config) at (0,0) {\textbf{1. Configure}\\JSON paths, CSS weights, target browser, limits};
+        \node[stage] (generate) at (4,0) {\textbf{2. Generate subject}\\DOM tree + base styles + modified styles};
+        \node[stage] (oracle) at (8,0) {\textbf{3. Serialize and execute Oracle}\\incremental layout versus fresh layout computation};
+        \node[decision] (bug) at (12,0) {Dimension\\mismatch?};
+
+        \node[output] (pass) at (16,-1.6) {Pass: update counters};
+        \node[process] (sort) at (12,-3.2) {\textbf{4. Match existing group}\\Compare the candidate against group rules};
+        \node[process] (minify) at (7.6,-3.2) {\textbf{5. Minimize unmatched candidate}\\Retain only oracle-preserving DOM and CSS changes};
+        \node[output] (report) at (3.3,-3.2) {\textbf{6. Persist report}\\HTML reproducers, pickled subjects, metadata, variants, and run summary};
+
+        \draw[flow] (config) -- (generate);
+        \draw[flow] (generate) -- (oracle);
+        \draw[flow] (oracle) -- (bug);
+        \draw[optional] (bug.east) -- ++(0.75,0) |- node[near start, above, font=\scriptsize] {No} (pass.west);
+        \draw[optional] (pass.north) -- ++(0,2.2) -| (generate.north);
+        \draw[flow] (bug.south) -- node[right, font=\scriptsize] {Yes} (sort.north);
+        \draw[flow] (sort) -- node[above, font=\scriptsize] {No Match} (minify);
+        \draw[optional] (sort.south) -- node[right, align=left, font=\scriptsize] {Match:\\Save in Group} ++(0,-1.05) -| (report.south);
+        \draw[flow] (minify) -- (report);
+        \draw[optional] (report.north) to[out=105,in=245] node[left, font=\scriptsize] {next test} (generate.south);
+    \end{tikzpicture}
+    }
+    \caption{\toolname pipeline.  Each generated subject is tested by a
+    browser-resident layout oracle.  Passing subjects advance the fuzzing
+    loop; candidates are structurally classified, minimized when necessary,
+    and persisted with their reproduction artifacts and cumulative metrics.}
+    \label{fig:implementation-pipeline}
+\end{figure*}

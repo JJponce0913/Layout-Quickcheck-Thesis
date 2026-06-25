@@ -1,87 +1,73 @@
 \section{IMPLEMENTATION}
 
 \toolname is implemented in Python as an end-to-end, feedback-free fuzzing
-pipeline for browser layout invalidation.  The implementation separates a
-test case from its serialization, executes the serialized page in a real
-browser through Selenium WebDriver. A \UnderInvalidation failure is identified
-when there is a discrepancy between incremental and fresh layout computations.
-The same pipeline then classifies, minimizes,and sorts the result. 
-At a high level, a run has six stages: (1) configuration and browser
-selection, (2) generation of a DOM and two style states, (3) execution of
-the layout oracle, (4) minimization of a bug-triggering test case, (5) optional
-structural grouping and minimization skipping, and (6) report and metric
-production.  The following sections describe these stages and the concrete
-artifacts exchanged between them.
+pipeline for browser layout invalidation.  The implementation executes the serialized page in a real
+browser through Selenium WebDriver, and identifies an \UnderInvalidation
+failure when incremental and fresh layout computations disagree.  The same
+pipeline then generates candidate reports, minimizes them, and groups
+structurally related reports.  The following sections describe the
+implementation: the layout oracle, the
+generation of web pages and bug candidates, and the clustering of reports.
 
-\begin{figure*}[t]
-    \centering
-    \resizebox{\textwidth}{!}{%
-    \begin{tikzpicture}[
-        >=stealth,
-        stage/.style={draw, rounded corners=2pt, align=center, minimum height=1.25cm,
-            text width=2.9cm, font=\scriptsize, fill=blue!5},
-        process/.style={draw, rounded corners=2pt, align=center, minimum height=1.25cm,
-            text width=3.1cm, font=\scriptsize, fill=green!7},
-        decision/.style={draw, diamond, aspect=1.45, align=center, inner sep=1pt,
-            font=\scriptsize, fill=orange!12},
-        output/.style={draw, rounded corners=2pt, align=center, minimum height=1.1cm,
-            text width=3.0cm, font=\scriptsize, fill=gray!12},
-        flow/.style={->, thick},
-        optional/.style={->, thick, dashed}
-    ]
-        \node[stage] (config) at (0,0) {\textbf{1. Configure}\\JSON paths, CSS weights, target browser, limits};
-        \node[stage] (generate) at (4,0) {\textbf{2. Generate subject}\\DOM tree + base styles + modified styles};
-        \node[stage] (oracle) at (8,0) {\textbf{3. Serialize and execute Oracle}\\incremental layout versus fresh layout computation};
-        \node[decision] (bug) at (12,0) {Dimension\\mismatch?};
+\input{fig_implementation_pipeline}
 
-        \node[output] (pass) at (16,-1.6) {Pass: update counters};
-        \node[process] (sort) at (12,-3.2) {\textbf{4. Match existing group}\\Compare the candidate against group rules};
-        \node[process] (minify) at (7.6,-3.2) {\textbf{5. Minimize unmatched candidate}\\Retain only oracle-preserving DOM and CSS changes};
-        \node[output] (report) at (3.3,-3.2) {\textbf{6. Persist report}\\HTML reproducers, pickled subjects, metadata, variants, and run summary};
+\subsection{Layout Oracle}
 
-        \draw[flow] (config) -- (generate);
-        \draw[flow] (generate) -- (oracle);
-        \draw[flow] (oracle) -- (bug);
-        \draw[optional] (bug.east) -- ++(0.75,0) |- node[near start, above, font=\scriptsize] {No} (pass.west);
-        \draw[optional] (pass.north) -- ++(0,2.2) -| (generate.north);
-        \draw[flow] (bug.south) -- node[right, font=\scriptsize] {Yes} (sort.north);
-        \draw[flow] (sort) -- node[above, font=\scriptsize] {No Match} (minify);
-        \draw[optional] (sort.south) -- node[right, align=left, font=\scriptsize] {Match:\\Save in Group} ++(0,-1.05) -| (report.south);
-        \draw[flow] (minify) -- (report);
-        \draw[optional] (report.north) to[out=105,in=245] node[left, font=\scriptsize] {next test} (generate.south);
-    \end{tikzpicture}
-    }
-    \caption{\toolname pipeline.  Each generated subject is tested by a
-    browser-resident layout oracle.  Passing subjects advance the fuzzing
-    loop; candidates are structurally classified, minimized when necessary,
-    and persisted with their reproduction artifacts and cumulative metrics.}
-    \label{fig:implementation-pipeline}
-\end{figure*}
+\toolname checks layout correctness using self-differential testing: it
+tests the browser against itself rather than comparing one browser against
+another browser or against an external reference implementation. This is the
+core idea of the oracle. For each generated test case, \toolname asks
+whether the browser produces the same layout for the same final page state
+when that state is reached in two different ways.
 
-\subsection{Configuration, Execution Model, and Test Subjects}
+This differs from most existing browser fuzzers because \toolname does not
+treat crashes, security violations, API exceptions, or cross-browser
+differences as its main correctness signal. Crash-oriented fuzzers can find
+memory-safety and stability bugs, but an under-invalidation bug may leave
+the browser running normally while still displaying a stale layout.
+Cross-browser rendering fuzzers can find cases where two browsers disagree,
+but disagreement alone does not show which browser is wrong or whether the
+problem is caused by incremental layout invalidation. In contrast,
+\toolname compares two layout computations inside the same browser for the
+same final page state, making the oracle specifically targeted at stale
+incremental layout results.
 
-The command-line runner accepts a JSON configuration file and initializes a
-process-wide configuration object before any pages are generated.  The
-configuration supplies two paths: a directory for persistent bug reports and
-a directory for temporary generated pages.  It also supplies a list of
-browser variants and a map from CSS property names to generation weights.
-The runner supports a bug limit, test limit, and crash limit.  The bug limit
-stops the experiment when it reaches the specified cumulative number of bug
-reports, while the test limit stops it at the specified cumulative number of
-executed test cases.  The crash limit stops the current process after the
-specified number of browser or WebDriver failures; crashes from an earlier
-resumed process remain in the reported total but do not consume the new
-process's allowance.  The \texttt{--no-sort} option disables structural
-classification and grouping, causing each candidate to be fully minimized
-and saved as an individual report rather than compared with existing bug
-groups.  With no explicit limit, the runner remains active until it is
-interrupted or the crash limit is reached.
+The first execution path is the incremental layout path. \toolname
+loads a generated page, applies a set of dynamic style changes, and records
+the resulting layout. This is the point where the layout engine decides which 
+cached layout state must be invalidated after the page changes. 
+The second execution path is a fresh layout path. After the
+style changes have been applied, \toolname forces the same browser to rebuild
+the page from scratch and compute the layout again from the same final HTML 
+and CSS state creating the correct build of this web page configuration. 
 
-A browser variant specifies a browser type together with its WebDriver path,
-viewport, and optional browser settings.  After reading a variant from the
-configuration, \toolname builds the corresponding Selenium WebDriver for
-Chrome, Firefox, or Safari.  The variant marked \texttt{target} is used for
-the main fuzzing loop.
+These two executions should produce identical results. If the incremental
+layout differs from the fresh layout, then the browser has produced two
+different layouts for the same final page state. Because both results come
+from the same browser, the mismatch is not caused by differences between
+browser engines, feature support, or rendering policies. Instead, it is
+evidence that the incremental path reused stale layout information and
+failed to invalidate part of the page correctly.
+
+In practice, the oracle records the position and size of each element after
+the incremental update and then records the same information again after the
+fresh layout computation. It compares the position,
+width, and height for matching elements. If all recorded values match, the
+test passes. If any element has a different layout between the two paths,
+\toolname reports the test as a layout-bug candidate.
+
+This oracle is important because it gives \toolname a correctness signal for
+bugs that do not cause crashes and do not require another browser to serve
+as a reference. By comparing the browser's incremental behavior against its
+own fresh layout behavior, \toolname directly targets the under-invalidation
+errors that conventional fuzzers are not designed to detect.
+
+\subsection{Web-Page and Bug Candidate Generation}
+
+\toolname generates web pages that are designed to exercise layout
+invalidation behavior rather than arbitrary browser behavior. Each test case
+contains an initial page state and a style update.
+
 Internally, each generated test is represented as a \texttt{RunSubject}:
 
 \begin{itemize}
@@ -93,126 +79,55 @@ Internally, each generated test is represented as a \texttt{RunSubject}:
     later by JavaScript.
 \end{itemize}
 
-Both style maps are indexed by generated element identifier and then by CSS
-property name.  Keeping base and modified declarations separate captures the
-state transition being tested: the initial layout is computed from the base
-map, and the incremental update is the modified map. 
+The \texttt{ElementTree} defines the page structure, while the two
+\texttt{StyleMap}s define the base state and the modified state. The base style
+map determines the layout that the browser computes when the page first
+loads. The modified style map is applied later through JavaScript, forcing
+the browser to use its incremental layout invalidation engine. This generated page 
+is the incremental version of the web page which is then later compared to a from scratch
+version of the web page.
 
-\subsection{DOM and CSS Generation}
+The generator builds pages from nested elements and text. Nested elements are
+important because many layout bugs are triggered when their are changes 
+between parents, children, siblings, or descendants. Text is
+also useful because it introduces content-dependent sizing and positioning.
+Together, these structures create pages where a single style change can
+propagate through multiple parts of the layout tree, increasing the chance
+that a missed invalidation decision becomes observable.
 
-\toolname generates a body subtree recursively.  The current generator uses
-\texttt{div} elements and text nodes.  Each \texttt{div} receives a unique
-alphabetic identifier derived from a UUID so that it can be addressed from
-both CSS and the generated JavaScript.  Generation is probabilistic: the
-body is very likely to receive children, while nested \texttt{div}s have a
-smaller probability of receiving one or more children.  Text nodes contain
-one or more generated sentences, optionally separated by a newline.  This
-produces trees with both nested boxes and text-dependent sizing behavior.
+To further increase the likelihood of triggering under-invalidation behavior,
+\toolname biases generation toward CSS properties that are likely to affect
+layout geometry. Properties such as \texttt{display}, grid-related
+properties, \texttt{width}, \texttt{height}, percentage sizes, pixel sizes,
+and transforms are useful because they can change element size, position,
+layout mode, or parent-child layout relationships. These properties are more
+likely to require recomputation than purely visual properties, so they give
+the oracle more meaningful state changes to check.
 
-For every non-text element, the generator independently constructs base and
-modified style maps.  It walks a repository-maintained catalogue of CSS
-properties and their supported value generators.  The configured weight is
-first constrained to the range 0--100 and then divided by 100 to obtain the
-probability of selecting that property, i.e., $P(\text{select}) = w/100$.
-Thus, a weight of zero disables the property, a weight of 40 selects it with
-probability 0.40, and a weight of 100 selects it whenever it is considered.
-This random decision is made independently for each non-text element and for
-each of its base and modified style maps.  If selected, a property-specific
-generator produces a valid length or keyword value.  Unspecified properties
-use a default selection weight, allowing an experiment to focus on selected
-properties without having to enumerate the entire catalogue.
+The generator also supports weighted property selection. These weights allow
+an experiment to increase the probability of selecting properties that are
+expected to stress layout invalidation, while reducing or disabling
+properties that mostly add noise. This
+changes the distribution of generated tests so that more executions target
+the kinds of mutations that are likely to expose stale layout results.
 
-This design makes property weighting an input-distribution control rather
-than a change to the oracle.  A configuration can emphasize properties that
-are relevant to a particular layout behavior while reducing or disabling the
-selection of less relevant properties.  The weighted and unweighted
-experiments in Section~V therefore execute the same generation and oracle
-pipeline but sample different style distributions.
+This design addresses the second challenge by making generation
+invalidation-aware. Rather than producing only valid HTML and CSS,
+\toolname produces pages with dynamic layout-affecting updates. As a result,
+each test is more likely to exercise the browser's incremental layout logic
+and more likely to produce a bug candidate when that logic fails to
+invalidate stale geometry.
 
-\subsection{Page Serialization and the Layout Oracle}
-
-Each \texttt{RunSubject} is serialized into a self-contained temporary HTML
-file.  The serializer recursively emits the element tree, places base
-declarations in each element's inline \texttt{style} attribute, and emits a
-JavaScript \texttt{makeStyleChanges()} function.  That function assigns every
-declaration in the modified style map through the element's \texttt{style}
-object.  The generated page also includes a small JavaScript support file
-that implements the geometry collection and comparison operations.  The
-runner uses a temporary HTML file to execute each generated test case.
-
-The oracle compares two executions that should have final
-markup and style declarations an incremental and a fresh layout computation:
-
-\begin{enumerate}
-    \item Selenium navigates the target browser to the generated local file
-    URL and waits for the document body to be present.
-    \item \texttt{makeStyleChanges()} applies the modified declarations to
-    the live document.  This is the incremental path whose invalidation
-    behavior is under test.
-    \item The page records \texttt{getBoundingClientRect()} for every DOM
-    element.  Each observation includes the element identifier, tag name,
-    and its dimensions.
-    \item The page assigns the document element's \texttt{innerHTML}
-    property to itself.  This reconstruct forces the the browser to establish a fresh layout for that final state again.
-    \item The page collects the dimensions again and compares the two sets.
-    A difference in \texttt{x}, \texttt{y}, \texttt{left}, \texttt{right},
-    \texttt{top}, \texttt{bottom}, \texttt{width}, or \texttt{height} for
-    the same element is returned to Python.
-\end{enumerate}
-
-The browser-side comparison returns a list of differing elements.  Each
-entry identifies the affected element and records the attributes that differ
-as well as the values after incremental application and after document
-reconstruction.  An empty list is a pass; a nonempty list is represented as
-a layout-bug result.  WebDriver failures produce a separate page-crash
-result, while a page-load timeout is reported by the harness.  Recording the
-individual geometric fields is useful during triage because it distinguishes,
-for example, a stale width from a descendant-position mismatch.
-
-The oracle detects a candidate failure when the incremental and reconstructed
-layout paths produce different element dimensions in the selected browser and
-viewport. 
-
-\subsection{Fuzzing Loop and Safe Repository}
-
-The runner first constructs a small repository of known-safe subjects.  It
-generates and executes subjects until the configured safe directory contains
-25 passing serialized \texttt{RunSubject} objects.  The configured report
-directory is a persistent, cumulative bug repository: it contains all saved
-reports, groups, safe samples, and the run summary for that configuration.
-When a later invocation uses the same directory, it continues the same
-repository and aggregates newly discovered reports with the existing ones
-rather than creating a separate collection.  These safe samples are used to
-prevent the grouping algorithm from accepting a rule that would also match known non-bug inputs.
-
-The main loop then generates one subject, executes the oracle, increments
-the pass counter for a clean result, and enters post-processing only for a
-candidate.  After every completed test, the runner updates the run summary.
-The summary records executed tests, passes, candidate bugs, failures that no
-longer reproduce during reduction, reports with no remaining modified style,
-crashes, elapsed time, and cumulative minimization and sorting time.  It also
-counts standalone reports, grouped reports, and groups by scanning the report
-directory. \todo{Not in final version} Threshold snapshots are written at every ten candidates and
-every 60 seconds of accumulated runtime, which supports time-series plots.
-
-The runner resumes these cumulative statistics if a report directory already
-contains \texttt{run\_summary.json}. Resuming with the same directory retains the
-existing bug reports, bug groups, grouping rules, and safe samples.  New
-reports are therefore compared with the accumulated repository and can join
-an existing group instead of forcing the grouping process to start again.
-This makes interrupted long-running experiments continue as one statistical
-run, without losing their prior discovery, grouping, or measurement state.
-
-\subsection{Delta Debugging}
+\subsection{Minimization and Structural Clustering}
 
 Candidate pages are usually much larger than the condition required to
 reproduce a mismatch.  \toolname applies delta debugging to reduce a
-bug-triggering test case while preserving the oracle result.  For each proposed simplification,
-it deep-copies the current subject, executes the candidate in the target
-browser, and retains the copy only if the result remains a bug.  Every
-accepted reduction becomes the new subject, so later reductions are tested
-against the smallest reproducer found so far.  The delta-debugging process
-uses the following proposal families in order:
+bug-triggering test case while preserving the oracle result.  For each
+proposed simplification, it deep-copies the current subject, executes the
+candidate in the target browser, and retains the copy only if the result
+remains a bug.  Every accepted reduction becomes the new subject, so later
+reductions are tested against the smallest reproducer found so far.  The
+delta-debugging process uses the following proposal families in order:
 
 \begin{enumerate}
     \item remove each element, including its associated base and modified
@@ -222,8 +137,6 @@ uses the following proposal families in order:
     \item move one modified declaration into the base map, thereby testing
     whether that declaration must be an incremental change rather than merely
     being present in the final state;
-    \item replace generated length values with \texttt{20px} or
-    \texttt{-20px}, preserving only their sign; and
     \item apply readability-oriented transformations, including minimum box
     sizes, background colors, short identifiers, and an optional in-page
     control overlay.
@@ -236,80 +149,61 @@ mismatch, it is not necessary for the incremental transition and can be
 removed from the set of modified properties.  Conversely, declarations that
 cannot be moved identify the state change that is more likely to matter to
 invalidation.  The final oracle run is recorded again after all proposal
-families have been exhausted.  If
-the candidate no longer reproduces, it is counted as a false positive rather
-than saved as a confirmed layout report.  A layout mismatch with an empty
-modified-style map is also counted separately because it no longer expresses
-the intended incremental CSS-change scenario.
+families have been exhausted.  If the candidate no longer reproduces, it is
+counted as a false positive rather than saved as a confirmed layout report.
+A layout mismatch with an empty modified-style map is also counted separately
+because it no longer expresses the intended incremental CSS-change scenario.
 
-\subsection{Structural Grouping and Minimization Skipping}
+In order to cluster bugs the runner first constructs a small repository of known-safe subjects.  It
+generates and executes subjects until the configured safe directory contains
+25 passing serialized \texttt{RunSubject} objects. 
+These safe samples are used to prevent the grouping algorithm from accepting
+a rule that would also match known non-bug inputs.
 
 Full reduction is expensive when many generated subjects trigger a pattern
 already represented in the report directory.  With sorting enabled,
 \toolname therefore attempts to match a new candidate against existing bug
-groups before full minimization.  A subject is converted to a tree in which
-each node contains its tag, identifier, base styles, modified styles, and
-children; text is represented explicitly.  The first node with modified
-styles is used as the start node for a rule because it anchors comparison on
-the update of interest.  The rule represents the DOM structure relative to
-this anchor: it compares the modified node and its ancestor/descendant structure,
-rather than depending on that node's absolute location in the full page tree.
-This allows structurally similar update patterns to match even when they
-occur in different generated pages.
+groups before full minimization.  The \texttt{--no-sort} option disables
+structural classification and grouping, causing each candidate to be fully
+minimized and saved as an individual report rather than compared with
+existing bug groups.
+
+A run subject is in a tree in which each node base styles, modified styles, and children; text is represented
+explicitly as a node in the tree. The first node with modified styles is used as the start node
+for a rule because it anchors comparison relative to this modified node.  The
+rule represents the DOM structure relative to this anchor: it compares the
+modified node and its ancestor/descendant structure, rather than depending
+on that node's absolute location in the full page tree.  This allows
+structurally similar update patterns to match even when they occur in
+different generated pages.
 
 A group stores a merged representative tree and an extracted JSON rule.  To
 form a candidate rule, the implementation merges two trees recursively.
 Equal tags, values, and declarations are retained.  Disagreements are
-represented by the wildcard value \texttt{diff}.  The resulting rule consists
-of an ordered HTML pattern and the common base and modified style
+represented by the wildcard value \texttt{diff}.  The resulting rule
+consists of an ordered HTML pattern and the common base and modified style
 requirements at the start node.  Matching checks both components: the
 incoming subject must contain the ordered structural pattern and at least one
 matching element must have the required base and modified declarations.
-Wildcards permit variation where the merged reports disagree while retaining
-the shared structure and update signal.
 
 Before accepting either a match or a new group, the rule is validated against
-the safe repository.  Rules with no modified-style requirement or with a trivial
-single-element pattern are rejected, and a rule is rejected if it matches
-any safe sample.  This is a conservative guard against a broad structural
-description that would classify ordinary pages as bug instances.  It does
-not prove semantic equivalence, but it makes group promotion depend on both
-bug examples and known non-bug examples.
+the safe repository. Rules with no modified-style requirement or with a
+trivial single-element pattern are rejected, and a rule is rejected if it
+matches any safe sample.  This is a conservative guard against a broad
+structural description that would classify ordinary pages as bug instances.
+It makes group promotion depend
+on both bug examples and known non-bug examples.
 
-If an incoming candidate matches an existing rule, the runner skips the
-full reduction and saves it as another instance under that group.  Otherwise,
-it minimizes the candidate first.  The final minimized subject is then
-compared against existing groups and against standalone reports.  Matching a
-group adds the new instance to that group.  Matching a standalone report
-promotes the two reports into a newly created \texttt{bug-group-*} directory
-and writes the extracted rule.  After every group update, group artifacts
-are recomputed so the merged representative and rule correspond to the
-instances currently stored in that directory.  The sorting time is measured
-separately and added to the run summary alongside minimization time; this
-makes the cost and benefit of grouping measurable in Section~V.
-
-\subsection{Report Layout, Reproduction, and Variant Results}
-
-Each saved report is placed in either a standalone \texttt{bug-*} directory
-or a child directory of a \texttt{bug-group-*} directory.  To keep the bug
-repository lightweight, the report stores pickled forms of the pre-reduction
-and minimized \texttt{RunSubject}, rather than retaining separate HTML
-versions of both pages.  These structured artifacts preserve the DOM and
-style states needed to rerun reduction or recompute grouping rules.
-
-The accompanying \texttt{data.json} records the save timestamp, bug type,
-all styles used, base and modified style names, the geometric differences
-returned by the oracle, whether minimization was skipped, the matched rule,
-and the time spent sorting and minimizing.  After minimization, the
-runner executes each configured browser variant and records browser name,
-browser version, operating-system details, viewport, variant description,
-and whether that variant also detects the bug.  These fields distinguish the
-target run from supplementary checks and make reports usable when browser
-versions or command-line flags change.
-
-Together, these artifacts allow a report to be inspected at several levels:
-the original input, the minimized browser reproducer, the exact
-geometry disagreement, the structured subject used by automated tooling, and
-its relationship to a group.  This is the implementation basis for the
-throughput, bug-rate, minimization-time, and grouping measurements reported
-in the evaluation.
+If an incoming candidate matches an existing rule, the runner skips the full
+reduction and saves it as another instance under that group.  Otherwise, it
+minimizes the candidate first.  The final minimized subject is then compared
+against existing groups and against standalone reports.  Matching a group
+adds the new instance to that group.  Matching a standalone report promotes
+the two reports into a newly created \texttt{bug-group-*} directory and
+writes the extracted rule.  After every group update, group artifacts are
+recomputed so the merged representative and rule correspond to the instances
+currently stored in that directory.  The sorting time is measured separately
+and added to the run summary alongside minimization time; this makes the
+cost and benefit of grouping measurable in Section~V. Each saved report is 
+placed in either a standalone \texttt{bug-*} directory
+or a child directory of a \texttt{bug-group-*} directory.  
