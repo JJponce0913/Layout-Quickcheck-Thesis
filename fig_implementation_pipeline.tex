@@ -15,8 +15,8 @@
         optional/.style={->, thick, dashed}
     ]
         \node[stage] (config) at (0,0) {\textbf{1. Configure}\\JSON paths, CSS weights, target browser, limits};
-        \node[stage] (generate) at (4,0) {\textbf{2. Generate subject}\\DOM tree + base styles + modified styles};
-        \node[stage] (oracle) at (8,0) {\textbf{3. Serialize and execute Oracle}\\incremental layout versus fresh layout computation};
+        \node[stage] (generate) at (4,0) {\textbf{2. Generate test case}\\DOM tree + base style state + modified style state};
+        \node[stage] (oracle) at (8,0) {\textbf{3. Serialize and execute Oracle}\\incremental layout version versus refreshed layout version};
         \node[decision] (bug) at (12,0) {Dimension\\mismatch?};
 
         \node[output] (pass) at (16,-1.6) {Pass: update counters};
@@ -36,8 +36,8 @@
         \draw[optional] (report.north) to[out=105,in=245] node[left, font=\scriptsize] {next test} (generate.south);
     \end{tikzpicture}
     }
-    \caption{\toolname pipeline.  Each generated subject is tested by a
-    browser-resident layout oracle.  Passing subjects advance the fuzzing
+    \caption{\toolname pipeline.  Each test case is tested by a
+    layout oracle.  Passing subjects advance the fuzzing
     loop; candidates are structurally classified, minimized when necessary,
     and persisted with their reproduction artifacts and cumulative metrics.}
     \label{fig:implementation-pipeline}

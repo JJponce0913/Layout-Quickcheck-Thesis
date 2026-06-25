@@ -7,7 +7,7 @@ Our evaluation of \toolname is guided by these fundamental questions:
 
 \noindent\textbf{RQ2: Do minimization and clustering reduce report complexity?}
 
-\noindent\textbf{RQ3: Does \toolname find real, novel under-invalidation
+\noindent\textbf{RQ3: Does \toolname find confirmed under-invalidation
 bugs?}
 
 \textbf{Benchmarks:} Table~\ref{tab:benchmarks} summarizes the browser
@@ -24,7 +24,7 @@ property weights for 60 minutes.  We save several characteristics of these runs 
 For RQ2, the evaluations compares Firefox runs with sorting enabled and disabled over a nine hour execution. We
 measure the number of css properties in the original reports, minimized reports and clustered reports, cumulative
 post-processing time of minimization and clustering, and execution time. Measuring total css properties takes into account only the bugs that are within a bug group as to not inflate the total css properties of grouped or minimized bugs that were never grouped. For RQ3, we report the status of
-novel bugs submitted to browser developers and use report groups and single
+confirmed bugs and use report groups and single
 bugs to describe the diversity of the report repository. 
 
 \subsection{RQ1: Finding Under-Invalidation Reports}
@@ -158,13 +158,12 @@ work spent on reports already represented by a bug group.
 }
 \end{center}
 
-\subsection{RQ3: Finding Real, Novel Bugs}
+\subsection{RQ3: Finding Confirmed Bugs}
 
 The candidate reports measured in RQ1 are not, by themselves, evidence of
 distinct root-cause bugs.  RQ3 therefore asks whether \toolname produces
-reports that survive external developer review.  We submitted
-\NumBugsNovel{} novel under-invalidation bugs discovered by \toolname to Chrome
-and Firefox developers; Table~\ref{tab:rq3-reported-bugs} records their
+reports that survive external developer review.  \toolname produced
+\NumBugsNovel{} confirmed under-invalidation bugs; Table~\ref{tab:rq3-reported-bugs} records their
 current statuses.  \NumBugsFixed{} of these reports were fixed or closed by
 developers.  We also reproduce \MozillaBugs{} human-submitted Mozilla bugs,
 showing that the oracle can reach known under-invalidation behavior.
@@ -224,7 +223,7 @@ Firefox groups.
 
 \noindent\textbf{Outcomes:} Table~\ref{tab:rq3-reported-bugs} establishes
 that \toolname's reports are actionable beyond the experimental oracle.  It
-produced \NumBugsNovel{} novel reports submitted to browser developers, and
+produced \NumBugsNovel{} confirmed bugs, and
 \NumBugsFixed{} were fixed or closed.  These outcomes provide external evidence
 that the tool reaches real under-invalidation defects rather than only
 reporting test artifacts.
@@ -247,8 +246,8 @@ Table~\ref{tab:rq3-reported-bugs}.
 \begin{center}
 \fbox{
 \begin{minipage}{0.95\linewidth}
-\textbf{RQ3:} \toolname finds real, novel under-invalidation bugs: it produced
-\NumBugsNovel{} reports submitted to browser developers, of which
+\textbf{RQ3:} \toolname finds confirmed under-invalidation bugs: it produced
+\NumBugsNovel{} confirmed bugs, of which
 \NumBugsFixed{} were fixed or closed.  Clustering helps further separate recurring
 reports from candidates to make independent validation easier.
 \end{minipage}

@@ -18,13 +18,13 @@ FuzzOrigin targets UXSS vulnerabilities through origin
 fuzzing~\cite{kim2022fuzzorigin}. However, one important browser
 mechanism remains difficult to test systematically: \textit{layout
 invalidation}, which determines which parts of a page must be
-recomputed after changes to the DOM or CSS.
+recomputed after style updates.
 
 Layout invalidation is difficult because browsers attempt to reuse as
 much previous work as possible while still ensuring that the final page
 state is correct. The browser rendering pipeline includes parsing,
 style computation, layout, painting, and related stages~\cite{wbe}.
-After a DOM or CSS update, invalidation decides which work can be reused
+After a style update, invalidation decides which work can be reused
 and which work must be recomputed. Public browser-engine trackers
 contain invalidation failures in Chromium, Firefox, and WebKit-based
 browsers~\cite{chromium497183437,chromium379886422,mozilla1452426,mozilla539356,webkit233421,webkit97801}.
@@ -36,11 +36,11 @@ invalidation was too difficult~\cite{mozilla2006reflow}.
 This paper introduces \toolname, a fuzzer for detecting
 under-invalidation bugs in modern web browser engines.
 \toolname systematically exercises incremental layout behavior
-by generating DOM and CSS updates that should force the browser to
+by generating style updates that should force the browser to
 recompute affected rendering state. Its central strategy is
-self-comparison: the system compares the browser's incremental layout
-result against its own from-scratch layout result for the same final
-page. This allows \toolname to detect stale layout state without
+self-differential testing: the system compares the browser's incremental
+layout version against its own refreshed layout version for the same final
+page state. This allows \toolname to detect stale layout state without
 relying on a separate browser implementation.
 
 This paper makes the following contributions:
@@ -49,12 +49,12 @@ This paper makes the following contributions:
     layout invalidation and explain why existing browser fuzzers do not
     systematically target under-invalidation bugs.
     \item We design \toolname, a targeted fuzzer that generates
-    DOM and CSS updates, compares incremental and fresh layout results,
+    style updates, compares incremental layout versions and refreshed layout versions,
     and reports stale layout or rendering state.
     \item We evaluate \toolname through experiments and ablation
     studies across XXX browser engines, measuring bug discovery,
     minimization, and clustering effectiveness.
     \item We release \toolname together with evaluation
-    artifacts, generated test cases, and benchmarks at the following
+    artifacts, test cases, and benchmarks at the following
     URL: XXX.
 \end{itemize}

@@ -3,7 +3,7 @@
 \toolname is implemented in Python as an end-to-end, feedback-free fuzzing
 pipeline for browser layout invalidation.  The implementation executes the serialized page in a real
 browser through Selenium WebDriver, and identifies an \UnderInvalidation
-failure when incremental and fresh layout computations disagree.  The same
+failure when the incremental layout version and refreshed layout version disagree.  The same
 pipeline then generates candidate reports, minimizes them, and groups
 structurally related reports.  The following sections describe the
 implementation: the layout oracle, the
@@ -16,7 +16,7 @@ generation of web pages and bug candidates, and the clustering of reports.
 \toolname checks layout correctness using self-differential testing: it
 tests the browser against itself rather than comparing one browser against
 another browser or against an external reference implementation. This is the
-core idea of the oracle. For each generated test case, \toolname asks
+core idea of the oracle. For each test case, \toolname asks
 whether the browser produces the same layout for the same final page state
 when that state is reached in two different ways.
 
@@ -30,45 +30,45 @@ but disagreement alone does not show which browser is wrong or whether the
 problem is caused by incremental layout invalidation. In contrast,
 \toolname compares two layout computations inside the same browser for the
 same final page state, making the oracle specifically targeted at stale
-incremental layout results.
+incremental layout version results.
 
-The first execution path is the incremental layout path. \toolname
-loads a generated page, applies a set of dynamic style changes, and records
+The first execution path is the incremental layout version. \toolname
+loads a test case, applies a style update, and records
 the resulting layout. This is the point where the layout engine decides which 
 cached layout state must be invalidated after the page changes. 
-The second execution path is a fresh layout path. After the
-style changes have been applied, \toolname forces the same browser to rebuild
+The second execution path is a refreshed layout version. After the
+style update has been applied, \toolname forces the same browser to rebuild
 the page from scratch and compute the layout again from the same final HTML 
 and CSS state creating the correct build of this web page configuration. 
 
 These two executions should produce identical results. If the incremental
-layout differs from the fresh layout, then the browser has produced two
+layout version differs from the refreshed layout version, then the browser has produced two
 different layouts for the same final page state. Because both results come
 from the same browser, the mismatch is not caused by differences between
 browser engines, feature support, or rendering policies. Instead, it is
-evidence that the incremental path reused stale layout information and
+evidence that the incremental layout version reused stale layout information and
 failed to invalidate part of the page correctly.
 
 In practice, the oracle records the position and size of each element after
 the incremental update and then records the same information again after the
-fresh layout computation. It compares the position,
+refreshed layout version. It compares the position,
 width, and height for matching elements. If all recorded values match, the
 test passes. If any element has a different layout between the two paths,
 \toolname reports the test as a layout-bug candidate.
 
 This oracle is important because it gives \toolname a correctness signal for
 bugs that do not cause crashes and do not require another browser to serve
-as a reference. By comparing the browser's incremental behavior against its
-own fresh layout behavior, \toolname directly targets the under-invalidation
+as a reference. By comparing the browser's incremental layout version against its
+own refreshed layout version, \toolname directly targets the under-invalidation
 errors that conventional fuzzers are not designed to detect.
 
-\subsection{Web-Page and Bug Candidate Generation}
+\subsection{Test Case and Bug Generation}
 
-\toolname generates web pages that are designed to exercise layout
+\toolname generates test cases that are designed to exercise layout
 invalidation behavior rather than arbitrary browser behavior. Each test case
 contains an initial page state and a style update.
 
-Internally, each generated test is represented as a \texttt{RunSubject}:
+Internally, each test case is represented as a \texttt{RunSubject}:
 
 \begin{itemize}
     \item an \texttt{ElementTree}, which is a nested representation of the
@@ -80,12 +80,12 @@ Internally, each generated test is represented as a \texttt{RunSubject}:
 \end{itemize}
 
 The \texttt{ElementTree} defines the page structure, while the two
-\texttt{StyleMap}s define the base state and the modified state. The base style
-map determines the layout that the browser computes when the page first
-loads. The modified style map is applied later through JavaScript, forcing
-the browser to use its incremental layout invalidation engine. This generated page 
-is the incremental version of the web page which is then later compared to a from scratch
-version of the web page.
+\texttt{StyleMap}s define the base style state and the modified style state. The base style
+state determines the layout that the browser computes when the page first
+loads. The modified style state is applied later through JavaScript, forcing
+the browser to use its incremental layout invalidation engine. This test case
+produces the incremental layout version, which is then later compared to a
+refreshed layout version of the same final page state.
 
 The generator builds pages from nested elements and text. Nested elements are
 important because many layout bugs are triggered when their are changes 
@@ -108,13 +108,13 @@ The generator also supports weighted property selection. These weights allow
 an experiment to increase the probability of selecting properties that are
 expected to stress layout invalidation, while reducing or disabling
 properties that mostly add noise. This
-changes the distribution of generated tests so that more executions target
+changes the distribution of test cases so that more executions target
 the kinds of mutations that are likely to expose stale layout results.
 
 This design addresses the second challenge by making generation
 invalidation-aware. Rather than producing only valid HTML and CSS,
-\toolname produces pages with dynamic layout-affecting updates. As a result,
-each test is more likely to exercise the browser's incremental layout logic
+\toolname produces pages with layout-affecting style updates. As a result,
+each test case is more likely to exercise the browser's incremental layout logic
 and more likely to produce a bug candidate when that logic fails to
 invalidate stale geometry.
 
@@ -126,14 +126,14 @@ bug-triggering test case while preserving the oracle result.  For each
 proposed simplification, it deep-copies the current subject, executes the
 candidate in the target browser, and retains the copy only if the result
 remains a bug.  Every accepted reduction becomes the new subject, so later
-reductions are tested against the smallest reproducer found so far.  The
+reductions are tested against the smallest subject found so far.  The
 delta-debugging process uses the following proposal families in order:
 
 \begin{enumerate}
     \item remove each element, including its associated base and modified
     style entries;
     \item remove every style map for one element at a time;
-    \item remove individual base or modified declarations;
+    \item remove individual base style state or modified style state declarations;
     \item move one modified declaration into the base map, thereby testing
     whether that declaration must be an incremental change rather than merely
     being present in the final state;
@@ -160,7 +160,7 @@ generates and executes subjects until the configured safe directory contains
 These safe samples are used to prevent the grouping algorithm from accepting
 a rule that would also match known non-bug inputs.
 
-Full reduction is expensive when many generated subjects trigger a pattern
+Full reduction is expensive when many test cases trigger a pattern
 already represented in the report directory.  With sorting enabled,
 \toolname therefore attempts to match a new candidate against existing bug
 groups before full minimization.  The \texttt{--no-sort} option disables
@@ -168,23 +168,23 @@ structural classification and grouping, causing each candidate to be fully
 minimized and saved as an individual report rather than compared with
 existing bug groups.
 
-A run subject is in a tree in which each node base styles, modified styles, and children; text is represented
-explicitly as a node in the tree. The first node with modified styles is used as the start node
+A test case is represented as a tree in which each node records base style state, modified style state, and children; text is represented
+explicitly as a node in the tree. The first node with modified style state is used as the start node
 for a rule because it anchors comparison relative to this modified node.  The
 rule represents the DOM structure relative to this anchor: it compares the
 modified node and its ancestor/descendant structure, rather than depending
 on that node's absolute location in the full page tree.  This allows
 structurally similar update patterns to match even when they occur in
-different generated pages.
+different test cases.
 
 A group stores a merged representative tree and an extracted JSON rule.  To
 form a candidate rule, the implementation merges two trees recursively.
 Equal tags, values, and declarations are retained.  Disagreements are
 represented by the wildcard value \texttt{diff}.  The resulting rule
-consists of an ordered HTML pattern and the common base and modified style
+consists of an ordered HTML pattern and the common base style state and modified style state
 requirements at the start node.  Matching checks both components: the
 incoming subject must contain the ordered structural pattern and at least one
-matching element must have the required base and modified declarations.
+matching element must have the required base style state and modified style state declarations.
 
 Before accepting either a match or a new group, the rule is validated against
 the safe repository. Rules with no modified-style requirement or with a

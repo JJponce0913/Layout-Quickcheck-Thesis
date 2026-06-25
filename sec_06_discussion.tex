@@ -4,7 +4,7 @@
 
 \vspace{0.5em}
 
-Several parts of the workflow can limit throughput, particularly test generation, minimization, and sorting. More efficient minimization and sorting algorithms could reduce this overhead. For example, minimization could use a divide-and-conquer strategy that first attempts to remove groups of HTML nodes or CSS declarations, then progressively tests smaller groups when necessary. Unlike the current element-by-element and declaration-by-declaration approach, this could reduce the number of browser executions required to find a compact reproducer. 
+Several parts of the workflow can limit throughput, particularly test generation, minimization, and sorting. More efficient minimization and sorting algorithms could reduce this overhead. For example, minimization could use a divide-and-conquer strategy that first attempts to remove groups of HTML nodes or CSS declarations, then progressively tests smaller groups when necessary. Unlike the current element-by-element and declaration-by-declaration approach, this could reduce the number of browser executions required to find a compact subject. 
 
 Test generation could be improved by detecting and discarding semantically redundant mutations or combinations, such as style changes that produce the same computed value or cannot affect the generated element's layout. This would allow more browser executions to target meaningful layout interactions.
 
@@ -38,7 +38,7 @@ Nevertheless, the current implementation remains effective because it supports m
 
 The bug detection rate directly affects the efficiency of the tool, since a higher rate produces more candidate bugs per executed test case. However, repeatedly finding the same underlying defect is less useful than discovering distinct bugs. Nevertheless, the tool remains effective because sorting and grouping reduce duplicate reports and help distinguish recurring bug patterns.
 
-One approach to increasing the bug rate is to identify a stronger static style-weight configuration before a testing run begins. Results from earlier runs can identify HTML structures, CSS properties, and dynamic style changes that have produced layout inconsistencies most often. These observations can then be used to assign greater initial weights to promising properties while preserving lower probabilities for less frequently selected properties.
+One approach to increasing the bug rate is to identify a stronger static style-weight configuration before a testing run begins. Results from earlier runs can identify HTML structures, CSS properties, and style updates that have produced layout inconsistencies most often. These observations can then be used to assign greater initial weights to promising properties while preserving lower probabilities for less frequently selected properties.
 
 Separately, a feedback-driven system could dynamically adjust style-selection probabilities while a testing run is running. It could increase the weights of properties associated with novel layout discrepancies and reduce the weights of configurations that repeatedly produce uninteresting or duplicate results. The system should retain a degree of random exploration so that it does not become overly focused on known bug patterns. Nevertheless, the current random generation strategy remains useful because it can discover unexpected bug classes without requiring prior knowledge of effective configurations.
 

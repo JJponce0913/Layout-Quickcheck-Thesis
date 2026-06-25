@@ -9,17 +9,18 @@ implementation of the web platform standards, because writing effective
 test oracles for these standards is challenging. We introduce a class of
 correctness bugs that afflict web browser layout engines:
 under-invalidation bugs, which cause browsers to incompletely update
-internal state in response to page updates.
+internal state in response to style updates.
 
 To combat these bugs, we introduce \toolname, a fuzzer for
 finding, minimizing, and clustering under-invalidation bugs.
-\toolname uses the browser as its own oracle, comparing an
-incremental and from-scratch layout of the same web page and flagging
-differences as under-invalidation bugs. The fuzzer generates separate
-initial and modified CSS states, allowing it to test whether a DOM or CSS
-update leaves stale layout geometry after the browser recomputes the layout.
-Unlike cross-browser or cross-version comparison, this self-comparison
+\toolname uses self-differential testing, comparing the incremental layout
+version and refreshed layout version of the same final page state and
+flagging differences as under-invalidation bugs. The fuzzer generates
+separate base style state and modified style state, allowing it to test
+whether a style update leaves stale layout geometry after the browser
+recomputes the layout. Unlike cross-browser or cross-version comparison,
+this self-differential testing
 does not require a second implementation to determine the correct result.
 
-In our evaluation, \toolname is able to test hundreds of fuzzer candidates per minute in both Chrome and Firefox. In both browsers, it finds dozens of bug candidates (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox), with \toolname's custom weights further increasing the bug-discovery rate. Furthermore, across grouped Firefox reports, bug minimization reduces the number of style elements by \StyleElementOriginalToMinimizedReduction, while clustering reduces it by \StyleElementOriginalToClusteredReduction\ relative to original reports and \StyleElementMinimizedToClusteredReduction\ relative to minimized reports. Despite this, these features require only \RuntimePercentMinClust\ percent of the runtime. Finally, we show that \toolname can reproduce \MozillaBugs human-submitted bugs mined from the Mozilla bug tracker and find \NumBugsNovel novel bugs that were reported to and accepted by developers, \NumBugsFixed of which were fixed by developers.
+In our evaluation, \toolname is able to test hundreds of fuzzer candidates per minute in both Chrome and Firefox. In both browsers, it finds dozens of bug candidates (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox), with \toolname's custom weights further increasing the bug-discovery rate. Furthermore, across grouped Firefox reports, bug minimization reduces the number of style elements by \StyleElementOriginalToMinimizedReduction, while clustering reduces it by \StyleElementOriginalToClusteredReduction\ relative to original reports and \StyleElementMinimizedToClusteredReduction\ relative to minimized reports. Despite this, these features require only \RuntimePercentMinClust\ percent of the runtime. Finally, we show that \toolname can reproduce \MozillaBugs human-submitted bugs mined from the Mozilla bug tracker and find \NumBugsNovel confirmed bugs, \NumBugsFixed of which were fixed by developers.
 \end{abstract}

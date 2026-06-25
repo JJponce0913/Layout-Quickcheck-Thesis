@@ -9,7 +9,7 @@ at effectively fuzzing browser layout invalidation.
 \subsection{Challenge 1: Defining a Correctness Oracle}
 
 A central challenge in testing layout invalidation is that there is no
-obvious external ground truth for the correct layout of a generated page.
+obvious external ground truth for the correct layout of a test case.
 Cross-browser comparisons can expose rendering differences, but those
 differences do not necessarily identify an invalidation bug because browsers
 may make different implementation, feature-support, or rendering choices.
@@ -37,19 +37,20 @@ semantic layout mismatch rather than a process failure.
 execution path, not just a final page state.  The same HTML and CSS may be
 correct when the browser computes layout from scratch, but incorrect when the
 browser reaches that state through an incremental update.  A useful oracle
-must therefore compare two ways of reaching the same final document state:
-one through the normal dynamic update path and one through a fresh layout
+must therefore compare two ways of reaching the same final page state:
+one through the incremental layout version and one through a refreshed layout
 computation.
 
 \textbf{Solution 1}: \toolname addresses this challenge using a
-self-differential testing oracle.  For each generated test case, \toolname compares the browser's normal
-incremental layout after generated style changes against a from-scratch layout to identify a bug. 
+self-differential testing oracle.  For each test case, \toolname compares the browser's
+incremental layout version after a style update against a refreshed layout
+version to identify a bug. 
 
 \subsection{Challenge 2: Triggering Under-Invalidation Behavior}
 
 Valid HTML and CSS are not necessarily useful for testing layout
 invalidation.  Under-invalidation occurs only when a page first establishes a
-layout state, then receives a meaningful DOM or CSS update, and the browser
+layout state, then receives a meaningful style update, and the browser
 fails to recompute geometry affected by that update.  An unconstrained fuzzer
 can produce many accepted pages without exercising these incremental-layout
 paths. \toolname therefore
@@ -108,22 +109,22 @@ stale incremental result from a freshly computed final layout.
 \texttt{writing-mode}, \texttt{content-visibility}, padding, and table
 display values because they are less likely to produce
 under-invalidation bugs. Instead, these properties
-often add unnecessary complexity to the generated tests. Removing them 
-keeps the generated tests focused on mutations
+often add unnecessary complexity to the test cases. Removing them 
+keeps the test cases focused on mutations
 that are more likely to expose missed invalidation decisions and helps
 produce smaller, clearer bug reports. This focus is important because
 unconstrained random inputs can make an observed rendering difference hard
 to attribute to one invalidation decision~\cite{song2022r2z2,song2023metamong,zhou2025janus}.
 
 \textbf{Solution 2}: \toolname includes a generation strategy for
-steering generated inputs toward page updates that are likely to trigger
+steering test cases toward style updates that are likely to trigger
 layout under-invalidation bugs. The system focuses on CSS properties and
 mutations that should force layout recomputation, increasing the chance
 that a missed invalidation decision becomes observable.
 
 \subsection{Challenge 3: Reducing Report Complexity}
 
-Generated pages can contain many unrelated elements, declarations, and
+Test cases can contain many unrelated elements, declarations, and
 mutations.  Likely only a small portion of the page causes a bug thus the
 original report may obscure the relevant DOM structure and CSS transition.
 The output can also contain many reports that are syntactically different but
@@ -136,15 +137,15 @@ aggressively could hide genuinely different bugs.
 
 \textbf{Preserving the bug trigger}: Minimization is difficult because
 under-invalidation bugs depend on a precise sequence of layout states.
-The browser first lays out the original page, then applies a DOM or CSS
-update, and then decides which cached layout information can be reused.
+The browser first lays out the original page, then applies a style update,
+and then decides which cached layout information can be reused.
 If the minimizer removes an element, style, or mutation that seems
 unrelated but changes this invalidation path, the bug may disappear even
 though the original conditions were present.
 
-\textbf{Separating base and modified styles}: To identify which declarations
+\textbf{Separating base style state and modified style state}: To identify which declarations
 are essential to the transition, \toolname moves one modified style
-declaration at a time into the base style map. If the mismatch persists after
+declaration at a time into the base style state. If the mismatch persists after
 the move, that declaration was not required as an incremental update and can
 be removed from the modified state. If the mismatch disappears, the
 declaration remains modified because changing it after the initial layout is
@@ -160,7 +161,7 @@ groups.
 
 \textbf{Identifying repeated patterns}: To determine
 whether reports represent recurring behavior or potentially new bugs,
-\toolname records the DOM structure, base styles, modified styles, and
+\toolname records the DOM structure, base style state, modified style state, and
 affected element relationships.  It uses this representation to group reports
 that match an existing structural rule, while preserving unmatched reports as
 separate candidates.  The resulting groups are evidence of recurring
