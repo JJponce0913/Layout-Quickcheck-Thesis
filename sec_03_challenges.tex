@@ -6,17 +6,46 @@ browser layout engines. In the following, we outline core challenges
 that shape \toolname's design, along with their solutions aimed
 at effectively fuzzing browser layout invalidation.
 
-Existing browser fuzzers do solve this problem of a targeted
-state transition and a same-browser correctness oracle. JavaScript,
-WebGL, WebAssembly, and origin fuzzers focus on different execution
-surfaces and usually use crashes, security violations, or API failures as
-their signal~\cite{han2019codealchemist,park2020die,peng2023gleefuzz,draissi2025wemby,kim2022fuzzorigin}.
-Rendering fuzzers instead compare results across browser versions,
-browsers, or executions~\cite{song2022r2z2,song2023metamong,zhou2025janus}.
-Those techniques can reveal valuable regressions, but 
-not identify whether an incremental layout result is stale.
+\subsection{Challenge 1: Defining a Correctness Oracle}
 
-\subsection{Challenge 1: Triggering Under-Invalidation Behavior}
+A central challenge in testing layout invalidation is that there is no
+obvious external ground truth for the correct layout of a generated page.
+Cross-browser comparisons can expose rendering differences, but those
+differences do not necessarily identify an invalidation bug because browsers
+may make different implementation, feature-support, or rendering choices.
+Crash-based or assertion-based fuzzing is also insufficient because an
+under-invalidation bug can produce a visually incorrect layout while the
+browser continues running normally.  The difficult part is therefore not only
+generating a page that changes layout, but also deciding whether the browser
+reused stale layout information after that change.
+
+\textbf{No external ground truth}: A generated HTML and CSS test case does
+not come with a known correct layout.  Comparing against another browser can
+identify that two implementations disagree, but it cannot determine which
+browser is wrong or whether the difference is caused by invalidation.
+\toolname therefore needs an oracle that does not depend on a separate
+browser or reference implementation.
+
+
+\textbf{Non-crashing failures}: Under-invalidation bugs often do not crash
+the browser or violate an explicit assertion.  Instead, the browser may
+continue executing while displaying stale geometry.  This makes conventional
+crash-based fuzzing insufficient, because the fuzzer needs to detect a
+semantic layout mismatch rather than a process failure.
+
+\textbf{Path-dependent correctness}: Under-invalidation depends on an
+execution path, not just a final page state.  The same HTML and CSS may be
+correct when the browser computes layout from scratch, but incorrect when the
+browser reaches that state through an incremental update.  A useful oracle
+must therefore compare two ways of reaching the same final document state:
+one through the normal dynamic update path and one through a fresh layout
+computation.
+
+\textbf{Solution 1}: \toolname addresses this challenge using a
+self-differential testing oracle.  For each generated test case, \toolname compares the browser's normal
+incremental layout after generated style changes against a from-scratch layout to identify a bug. 
+
+\subsection{Challenge 2: Triggering Under-Invalidation Behavior}
 
 Valid HTML and CSS are not necessarily useful for testing layout
 invalidation.  Under-invalidation occurs only when a page first establishes a
@@ -26,9 +55,7 @@ can produce many accepted pages without exercising these incremental-layout
 paths. \toolname therefore
 biases generation toward CSS properties and mutations that are likely to
 change layout, so that each test is more likely to trigger the browser's
-invalidation logic. This is deliberately narrower than render-tree mutation and
-cross-rendering approaches, which do not use the incremental-versus-fresh
-layout transition as their test oracle~\cite{zeng2026rtfuzz,song2022r2z2,song2023metamong,zhou2025janus}.
+invalidation logic.
 
 \textbf{Display}: The \texttt{display} property is a useful target
 because it determines the layout mode used for an element and
@@ -88,18 +115,24 @@ produce smaller, clearer bug reports. This focus is important because
 unconstrained random inputs can make an observed rendering difference hard
 to attribute to one invalidation decision~\cite{song2022r2z2,song2023metamong,zhou2025janus}.
 
-\textbf{Solution 1}: \toolname includes a generation strategy for
+\textbf{Solution 2}: \toolname includes a generation strategy for
 steering generated inputs toward page updates that are likely to trigger
 layout under-invalidation bugs. The system focuses on CSS properties and
 mutations that should force layout recomputation, increasing the chance
 that a missed invalidation decision becomes observable.
 
-\subsection{Challenge 2: Reducing Report Complexity}
+\subsection{Challenge 3: Reducing Report Complexity}
 
 Generated pages can contain many unrelated elements, declarations, and
 mutations.  Likely only a small portion of the page causes a bug thus the
 original report may obscure the relevant DOM structure and CSS transition.
-The output can also contain many reports that are syntactically different but match a previously observed pattern.  Without reduction and grouping, developers must repeatedly inspect large, redundant reports.
+The output can also contain many reports that are syntactically different but
+match a previously observed pattern.  Without reduction and grouping,
+developers must repeatedly inspect large, redundant reports.  At the same
+time fuzzers commonly generate many HTML and CSS variations that
+exercise the same underlying defect, so treating every report as a new bug
+would overstate the diversity of the findings.  However, merging reports too
+aggressively could hide genuinely different bugs.
 
 \textbf{Preserving the bug trigger}: Minimization is difficult because
 under-invalidation bugs depend on a precise sequence of layout states.
@@ -125,29 +158,7 @@ the shared rule and minimized representative rather than fully minimizing an
 additional variation.  Unmatched reports are minimized and can establish new
 groups.
 
-\textbf{Solution 2}: \toolname minimizes reports while preserving the
-state transition that exposes the bug, then groups structurally equivalent
-reports around a shared representative.  This reduces the HTML and CSS a
-developer must inspect and avoids spending full minimization cost on reports
-already represented by a group.
-
-\subsection{Challenge 3: Establishing Real, Novel Under-Invalidation Bugs}
-
-A generated report is not automatically evidence of a real or distinct
-browser defect. As mentioned, fuzzers commonly generate many HTML and CSS
-variations that exercise the same underlying defect.  Treating every report
-as a new bug would overstate the diversity of the findings, while merging
-reports too aggressively could hide genuinely different bugs.
-
-\textbf{Submitting real bugs to browsers}: Even a reproducible mismatch is
-not sufficient to establish novelty.  The behavior may be known, intentional,
-or caused by an error in the test.  A report must therefore be understandable
-enough for browser developers to evaluate, and it must clearly show the
-expected fresh-layout result and the stale incremental result.  Browser
-developer review of submitted, minimized reproducers provides the external
-evidence that a candidate corresponds to a real and novel defect.
-
-\textbf{Separating repeated reports from distinct candidates}: To determine
+\textbf{Identifying repeated patterns}: To determine
 whether reports represent recurring behavior or potentially new bugs,
 \toolname records the DOM structure, base styles, modified styles, and
 affected element relationships.  It uses this representation to group reports
@@ -156,8 +167,11 @@ separate candidates.  The resulting groups are evidence of recurring
 patterns, not proof of a shared root cause; similarly, unmatched reports are
 candidates for separate validation rather than confirmed bugs.
 
-\textbf{Solution 3}: \toolname combines a same-browser,
-incremental-versus-fresh geometry oracle with structural grouping.  This
-produces reproducible reports, distinguishes repeated variants from
-potentially distinct candidates, and leaves final novelty confirmation to
-browser-developer review.
+\textbf{Solution 3}: \toolname minimizes reports while preserving the
+state transition that exposes the bug, then groups structurally equivalent
+reports around a shared representative.  This reduces the HTML and CSS a
+developer must inspect, avoids spending full minimization cost on reports
+already represented by a group, and separates repeated variants from
+potentially distinct candidates.  The resulting reports are then suitable for
+browser-developer review, which provides the final evidence that a candidate is
+real and novel.
