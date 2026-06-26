@@ -1,60 +1,99 @@
 \section{Introduction}
 
-\textit{Web browsers} are central to modern computing, with
-browser-based usage corresponding to over \textbf{80\%} of daily work
-in some organizations~\cite{montenegro2025workforce}. Browser makers
-therefore invest heavily in fuzzing, audits, security research,
-standardization, shared test suites, and interoperability efforts aimed
-at ensuring browser correctness~\cite{google-project-zero,mozilla-mythos,w3c,whatwg,wpt,interop}.
+\textit{Web browsers} are central to modern computing,
+  hosting applications that correspond to
+  over \textbf{80\%} of daily work in some organizations%
+  ~\cite{montenegro2025workforce}.
+Browser makers therefore invest heavily
+  in browser correctness,%
+  ~\cite{google-project-zero,mozilla-mythos,w3c,whatwg,wpt,interop},
+  including through fuzzing~\cite{clusterfuzz},
+  which uses a large number of randomly generated inputs
+  to identify bugs in the browser.
 
-Developers increasingly use \textit{fuzzing}, an automated testing
-technique that exercises software with large numbers of randomly
-generated or mutated inputs, to identify and fix bugs. Browser fuzzers
-have been successful at finding crashes, security vulnerabilities, and
-rendering regressions. R2Z2 detects rendering regressions by fuzzing the
-output of different browser versions~\cite{song2022r2z2}; Metamong
-detects render-update bugs through fuzzing~\cite{song2023metamong}; and
-FuzzOrigin targets UXSS vulnerabilities through origin
-fuzzing~\cite{kim2022fuzzorigin}. However, one important browser
-mechanism remains difficult to test systematically: \textit{layout
-invalidation}, which determines which parts of a page must be
-recomputed after style updates.
+Browser developers use fuzzers to find both
+  security and correctness bugs.
+On the security side, fuzzers such as \todo{XYZ}~\cite{?}
+  detect crashes in parsers, network libraries, and media engines,
+  which are both exposed to untrusted input
+  and must maximize performance.
+On the correctness side, fuzzers such as
+  R2Z2~\cite{song2022r2z2}, Janus~\cite{???},
+  and Metamong~\cite{song2023metamong}
+  use screenshots to detect browser rendering inconsistencies
+  between different versions of the same browser,
+  or between renderings of the different pages in the same browser,
+  that may indicate a regression or rendering bug.
+However, all of these approaches struggle to
+  precisely identify \emph{under-invalidation bugs},
+  a subtle yet critical type of correctness bug
+  in browser layout engines.
 
-Layout invalidation is difficult because browsers attempt to reuse as
-much previous work as possible while still ensuring that the final page
-state is correct. The browser rendering pipeline includes parsing,
-style computation, layout, painting, and related stages~\cite{wbe}.
-After a style update, invalidation decides which work can be reused
-and which work must be recomputed. Public browser-engine trackers
-contain invalidation failures in Chromium, Firefox, and WebKit-based
-browsers~\cite{chromium497183437,chromium379886422,mozilla1452426,mozilla539356,webkit233421,webkit97801}.
-Modern layout engines, including Chrome's LayoutNG, are designed in part
-to reduce these correctness bugs~\cite{kilpatrick2021layoutng}, and
-some optimizations have historically stalled because ensuring correct
-invalidation was too difficult~\cite{mozilla2006reflow}.
-
-This paper introduces \toolname, a fuzzer for detecting
-under-invalidation bugs in modern web browser engines.
-\toolname systematically exercises incremental layout behavior
-by generating style updates that should force the browser to
-recompute affected rendering state. Its central strategy is
-self-differential testing: the system compares the browser's incremental
-layout version against its own refreshed layout version for the same final
-page state. This allows \toolname to detect stale layout state without
-relying on a separate browser implementation.
+\emph{Invalidation} refers to the process by which
+  the browser updates internal data structures
+  in response to style changes~\cite{wbe}.
+Since style changes are frequent
+  (often every frame, 60 or even 120 times per second,
+  in response to animations),
+  substantial research has been devoted
+  to designing efficient invalidation procedures%
+  ~\cite{pldi25-megatron,medea}.
+Generally, browsers attempt to update \emph{as little}
+  of their internal data structures as possible;
+  however, updating \emph{too little} of this internal state
+  leads to an incorrect rendering that mixes
+  fresh (updated) and stale (not updated) data.
+Updating exactly the right set of fields requires
+  reasoning about transitive dependencies between layout algorithms,
+  reasoning that is difficult enough that public bug trackers
+  for Chrome, Firefox, and Safari's layout engines
+  contain numerous under-invalidation bugs%
+  ~\cite{chromium497183437,chromium379886422,mozilla1452426,mozilla539356,webkit233421,webkit97801}.
+Modern invalidation algorithms like LayoutNG~\cite{kilpatrick2021layoutng}
+  are purposefully designed to reduce the risk of under-invalidation,
+  while some promising algorithms~\cite{mozilla2006reflow}
+  have failed precisely because under-invalidation bugs proved
+  difficult to find and fix.
+  
+To combat these issues, this paper introduces
+  a new oracle that detects under-invalidation bugs
+  via \emph{self-differential testing},
+  where either a large or small change results in
+  the \emph{same} web page,
+  and where differences thus indicate under-invalidation,
+  and validate this oracle on bugs mined from
+  real-world browser bug databases.
+We extend this basic idea into \toolname, a fuzzer
+  that uses self-differential testing to detect under-invalidation bugs
+  using random generation and minimization
+  of complex web pages and web page changes,
+  and leveraging automated bug clustering
+  to reduce the bug review burden.
+We demonstrate that \toolname is effective at
+  both rapidly finding under-invalidation bugs
+  (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox)
+  and minimizing and clustering them,
+  reducing review load by \StyleElementOriginalToClusteredReduction.
+\NumBugsNovel bugs found by \toolname
+  were reported to Chrome and Firefox,
+  all accepted by developers and \NumBugsFixed already fixed.
+\toolname is now used as part of Mozilla's fuzzing workflow
+  to find under-invalidation bugs during development.
 
 This paper makes the following contributions:
 \begin{itemize}
-    \item We describe the challenges of extending fuzzing to browser
-    layout invalidation and explain why existing browser fuzzers do not
-    systematically target under-invalidation bugs.
-    \item We design \toolname, a targeted fuzzer that generates
-    style updates, compares incremental layout versions and refreshed layout versions,
-    and reports stale layout or rendering state.
-    \item We evaluate \toolname through experiments and ablation
-    studies across XXX browser engines, measuring bug discovery,
-    minimization, and clustering effectiveness.
-    \item We release \toolname together with evaluation
-    artifacts, test cases, and benchmarks at the following
-    URL: XXX.
+    \item A new class of bugs, under-invalidation bugs,
+      that can be efficiently detected using \emph{self-differential} testing;
+    \item \toolname, a targeted fuzzer for under-invalidation bugs
+      that generates web pages and web page changes,
+      detects under-invalidation bugs with self-different testing,
+      and minimizes and clusters the resulting bugs to reduce review load.
+    \item An evaluation of \toolname and its major components
+      on both Chrome and Firefox,
+      measuring bug discovery, minimization, and clustering
+      with both direct and ablation studies.
 \end{itemize}
+\noindent
+We release \toolname
+  together with evaluation artifacts, test cases, and benchmarks
+  at the following URL: \todo{URL}.
