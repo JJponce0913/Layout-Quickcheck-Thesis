@@ -1,26 +1,39 @@
 
 \begin{abstract}
-Fuzzing for web browsers has traditionally focused on crash testing,
-such as for finding security-relevant bugs in parsers and media
-processing engines, and regression testing, such as for finding
-newly-introduced bugs in rendering code. However, fuzzing has not
-traditionally been used for finding correctness bugs in the
-implementation of the web platform standards, because writing effective
-test oracles for these standards is challenging. We introduce a class of
-correctness bugs that afflict web browser layout engines:
-under-invalidation bugs, which cause browsers to incompletely update
-internal state in response to style updates.
+  Fuzzers are widely used to find
+    security-related bugs in web browser parsers and media engines
+    through crash testing,
+    and to discover cross-browser and cross-version regressions
+    via differential testing.
+  We introduce a new type of browser correctness bug,
+    under-invalidation bugs,
+    which occurs when a browser incorrectly
+    updates its internal state after a style update.
+  Under-invalidation bugs allow for \emph{self-differential} testing,
+    which tests a browser rendering engine against itself,
+    leading to particularly clean fuzzing results.
 
-To combat these bugs, we introduce \toolname, a fuzzer for
-finding, minimizing, and clustering under-invalidation bugs.
-\toolname uses self-differential testing, comparing the incremental layout
-version and refreshed layout version of the same final page state and
-flagging differences as under-invalidation bugs. The fuzzer generates
-separate base style state and modified style state, allowing it to test
-whether a style update leaves stale layout geometry after the browser
-recomputes the layout. Unlike cross-browser or cross-version comparison,
-this self-differential testing
-does not require a second implementation to determine the correct result.
-
-In our evaluation, \toolname is able to test hundreds of fuzzer candidates per minute in both Chrome and Firefox. In both browsers, it finds dozens of bug candidates (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox), with \toolname's custom weights further increasing the bug-discovery rate. Furthermore, across grouped Firefox reports, bug minimization reduces the number of style elements by \StyleElementOriginalToMinimizedReduction, while clustering reduces it by \StyleElementOriginalToClusteredReduction\ relative to original reports and \StyleElementMinimizedToClusteredReduction\ relative to minimized reports. Despite this, these features require only \RuntimePercentMinClust\ percent of the runtime. Finally, we show that \toolname can reproduce \MozillaBugs human-submitted bugs mined from the Mozilla bug tracker and find \NumBugsNovel confirmed bugs, \NumBugsFixed of which were fixed by developers.
+  To find under-invalidation bugs efficiently,
+    we develop \toolname, a fuzzer that
+    rapidly generates candidates web pages,
+    tests them in a real browser via self-differential testing,
+    and then minimizes and clusters any pages
+    that witness under-invalidation bugs.
+  In our evaluation,
+    \toolname is able to reproduce \MozillaBugs human-submitted bugs
+    mined from the Mozilla bug tracker with self-differential testing.
+  \toolname is also able to test
+    hundreds of fuzzer candidates per minute in both Chrome and Firefox,
+    finding dozens of bug candidates in each browsers
+    (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox).
+  Furthermore, \toolname's bug minimization and clustering passes
+    reduce the number of style elements
+    by \StyleElementOriginalToMinimizedReduction\ 
+    and \StyleElementMinimizedToClusteredReduction\ 
+    relative to minimized reports, all while requiring only
+    \RuntimePercentMinClust\ percent of the runtime.
+  Finally, we show that \toolname finds
+    \NumBugsNovel novel bugs, across both browsers,
+    that were reported to and accepted by the developers,
+    with \NumBugsFixed already fixed.
 \end{abstract}
