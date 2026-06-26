@@ -13,6 +13,21 @@ DEFAULT_SUMMARY_DIRS = [Path("bug_reports") / "tester"]
 DEFAULT_OUTPUT_DIR = Path("files") / "rq2"
 SNAPSHOT_PATTERN = re.compile(r"^run_summary_(\d+)s\.json$")
 HOURS_THRESHOLD_MINUTES = 240
+TITLE_FONT_SIZE = 24
+LABEL_FONT_SIZE = 22
+TICK_FONT_SIZE = 20
+LEGEND_FONT_SIZE = 20
+LINE_COLORS = ["#1f77b4", "#7b2cbf"]
+
+
+def format_run_name(name: str) -> str:
+    words = name.replace("-", " ").split()
+    replacements = {
+        "chromium": "Chromium",
+        "firefox": "Firefox",
+        "sort": "Sort",
+    }
+    return " ".join(replacements.get(word, word.capitalize()) for word in words)
 
 
 def execution_time_axis(max_minutes: float) -> tuple[float, str, float]:
@@ -20,6 +35,23 @@ def execution_time_axis(max_minutes: float) -> tuple[float, str, float]:
     if max_minutes > HOURS_THRESHOLD_MINUTES:
         return 60, "Execution time (hours)", 1
     return 1, "Execution time (minutes)", 10
+
+
+def increase_plot_font_sizes(axis) -> None:
+    axis.title.set_fontsize(TITLE_FONT_SIZE)
+    axis.xaxis.label.set_fontsize(LABEL_FONT_SIZE)
+    axis.yaxis.label.set_fontsize(LABEL_FONT_SIZE)
+    axis.tick_params(axis="both", which="major", labelsize=TICK_FONT_SIZE)
+    axis.tick_params(axis="both", which="minor", labelsize=TICK_FONT_SIZE)
+
+    legend = axis.get_legend()
+    if legend is not None:
+        for text in legend.get_texts():
+            text.set_fontsize(LEGEND_FONT_SIZE)
+
+
+def line_color(index: int) -> str:
+    return LINE_COLORS[index % len(LINE_COLORS)]
 
 
 def main() -> None:
@@ -45,9 +77,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    comparison_series = []
     for summary_dir in args.summary_dirs:
-        output_dir = args.output_dir / summary_dir.name
-        create_graphs(summary_dir, output_dir, args.max_minutes)
+        comparison_series.append(create_comparison_series(summary_dir, args.max_minutes))
+
+    if len(comparison_series) > 1:
+        create_processing_time_comparison(
+            comparison_series,
+            args.output_dir,
+            args.max_minutes,
+        )
 
 
 def create_graphs(
@@ -124,13 +163,49 @@ def create_processing_time_comparison(
     output_dir: Path,
     max_minutes: float | None,
 ) -> None:
-    create_total_runtime_comparison(comparison_series, output_dir, max_minutes)
-    create_sorting_time_comparison(comparison_series, output_dir)
-    create_combined_processing_time_comparison(comparison_series, output_dir)
     create_combined_processing_time_over_time_comparison(
         comparison_series, output_dir, max_minutes
     )
-    create_sorting_time_over_time_comparison(comparison_series, output_dir, max_minutes)
+
+
+def create_comparison_series(
+    summary_dir: Path,
+    max_minutes: float | None,
+) -> dict[str, object]:
+    snapshots = load_snapshots(summary_dir)
+    start_seconds = snapshots[0]["runtime_seconds"]
+    runtime_minutes = [
+        (snapshot["runtime_seconds"] - start_seconds) / 60
+        for snapshot in snapshots
+    ]
+
+    if max_minutes is not None:
+        snapshots = [
+            snapshot
+            for snapshot, minute in zip(snapshots, runtime_minutes)
+            if minute <= max_minutes
+        ]
+        runtime_minutes = [
+            (snapshot["runtime_seconds"] - start_seconds) / 60
+            for snapshot in snapshots
+        ]
+
+    if not snapshots:
+        raise SystemExit(
+            f"No snapshots in {summary_dir} fall within the {max_minutes:g}-minute execution window"
+        )
+
+    return {
+        "name": summary_dir.name,
+        "label": format_run_name(summary_dir.name),
+        "runtime_minutes": runtime_minutes,
+        "tests_run": [snapshot["tests_run"] for snapshot in snapshots],
+        "sorting_seconds": [snapshot["sorting_seconds"] for snapshot in snapshots],
+        "combined_processing_seconds": [
+            snapshot["true_minification_seconds"] + snapshot["sorting_seconds"]
+            for snapshot in snapshots
+        ],
+    }
 
 
 def create_total_runtime_comparison(
@@ -146,13 +221,14 @@ def create_total_runtime_comparison(
     time_scale, time_label, time_tick_interval = execution_time_axis(max_runtime_minutes)
     fig, ax = plt.subplots(figsize=(11, 6), dpi=140)
 
-    for series in comparison_series:
+    for index, series in enumerate(comparison_series):
         ax.plot(
             [minute / time_scale for minute in series["runtime_minutes"]],
             series["tests_run"],
             marker="o",
             linewidth=2,
-            label=series["name"],
+            color=line_color(index),
+            label=series["label"],
         )
 
     max_tests_run = max(max(series["tests_run"]) for series in comparison_series)
@@ -164,6 +240,7 @@ def create_total_runtime_comparison(
     ax.xaxis.set_major_locator(MultipleLocator(time_tick_interval))
     ax.grid(True, alpha=0.3)
     ax.legend()
+    increase_plot_font_sizes(ax)
     fig.tight_layout()
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -182,13 +259,14 @@ def create_combined_processing_time_comparison(
 ) -> None:
     fig, ax = plt.subplots(figsize=(11, 6), dpi=140)
 
-    for series in comparison_series:
+    for index, series in enumerate(comparison_series):
         ax.plot(
             series["tests_run"],
             series["combined_processing_seconds"],
             marker="o",
             linewidth=2,
-            label=series["name"],
+            color=line_color(index),
+            label=series["label"],
         )
 
     max_tests_run = max(max(series["tests_run"]) for series in comparison_series)
@@ -204,6 +282,7 @@ def create_combined_processing_time_comparison(
     ax.set_ylim(0, max_processing_seconds * 1.05 if max_processing_seconds else 1)
     ax.grid(True, alpha=0.3)
     ax.legend()
+    increase_plot_font_sizes(ax)
     fig.tight_layout()
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -229,13 +308,14 @@ def create_combined_processing_time_over_time_comparison(
     time_scale, time_label, time_tick_interval = execution_time_axis(max_runtime_minutes)
     fig, ax = plt.subplots(figsize=(11, 6), dpi=140)
 
-    for series in comparison_series:
+    for index, series in enumerate(comparison_series):
         ax.plot(
             [minute / time_scale for minute in series["runtime_minutes"]],
             series["combined_processing_seconds"],
             marker="o",
             linewidth=2,
-            label=series["name"],
+            color=line_color(index),
+            label=series["label"],
         )
 
     max_processing_seconds = max(
@@ -243,14 +323,15 @@ def create_combined_processing_time_over_time_comparison(
         for series in comparison_series
     )
 
-    ax.set_title("Combined Minimization and Clustering Time Over Time")
+    ax.set_title("Post-Processing Time Over Time")
     ax.set_xlabel(time_label)
-    ax.set_ylabel("Minimization and clustering time (seconds)")
+    ax.set_ylabel("Post-Processing time (seconds)")
     ax.set_xlim(0, max_runtime_minutes / time_scale)
     ax.set_ylim(0, max_processing_seconds * 1.05 if max_processing_seconds else 1)
     ax.xaxis.set_major_locator(MultipleLocator(time_tick_interval))
     ax.grid(True, alpha=0.3)
     ax.legend()
+    increase_plot_font_sizes(ax)
     fig.tight_layout()
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -266,13 +347,14 @@ def create_sorting_time_comparison(
 ) -> None:
     fig, ax = plt.subplots(figsize=(11, 6), dpi=140)
 
-    for series in comparison_series:
+    for index, series in enumerate(comparison_series):
         ax.plot(
             series["tests_run"],
             series["sorting_seconds"],
             marker="o",
             linewidth=2,
-            label=series["name"],
+            color=line_color(index),
+            label=series["label"],
         )
 
     max_tests_run = max(max(series["tests_run"]) for series in comparison_series)
@@ -288,6 +370,7 @@ def create_sorting_time_comparison(
     ax.set_ylim(0, max_sorting_seconds * 1.05 if max_sorting_seconds else 1)
     ax.grid(True, alpha=0.3)
     ax.legend()
+    increase_plot_font_sizes(ax)
     fig.tight_layout()
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -310,13 +393,14 @@ def create_sorting_time_over_time_comparison(
     time_scale, time_label, time_tick_interval = execution_time_axis(max_runtime_minutes)
     fig, ax = plt.subplots(figsize=(11, 6), dpi=140)
 
-    for series in comparison_series:
+    for index, series in enumerate(comparison_series):
         ax.plot(
             [minute / time_scale for minute in series["runtime_minutes"]],
             series["sorting_seconds"],
             marker="o",
             linewidth=2,
-            label=series["name"],
+            color=line_color(index),
+            label=series["label"],
         )
 
     max_sorting_seconds = max(
@@ -332,6 +416,7 @@ def create_sorting_time_over_time_comparison(
     ax.xaxis.set_major_locator(MultipleLocator(time_tick_interval))
     ax.grid(True, alpha=0.3)
     ax.legend()
+    increase_plot_font_sizes(ax)
     fig.tight_layout()
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -392,6 +477,7 @@ def save_line_plot(
             MultipleLocator(1 if xlabel.endswith("hours)") else 10)
         )
     ax.grid(True, alpha=0.3)
+    increase_plot_font_sizes(ax)
     fig.tight_layout()
     fig.savefig(output_path)
     plt.close(fig)

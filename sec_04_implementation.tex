@@ -145,61 +145,42 @@ delta-debugging process uses the following proposal families in order:
     control overlay.
 \end{enumerate}
 
-The fourth step, implemented by
+The fourth step in minimization, implemented by
 \texttt{Minify\_MoveStyleChangesToFirstLoad}, is particularly important for
 this bug class.  If moving a declaration to the initial state preserves the
 mismatch, it is not necessary for the incremental transition and can be
 removed from the set of modified properties.  Conversely, declarations that
 cannot be moved identify the state change that is more likely to matter to
-invalidation.  The final oracle run is recorded again after all proposal
-families have been exhausted.  If the candidate no longer reproduces, it is
-counted as a false positive rather than saved as a confirmed layout report.
-A layout mismatch with an empty modified-style map is also counted separately
-because it no longer expresses the intended incremental CSS-change scenario.
+invalidation.
 
-In order to cluster bugs the runner first constructs a small repository of known-safe subjects.  It
-generates and executes subjects until the configured safe directory contains
-25 passing serialized \texttt{RunSubject} objects. 
-These safe samples are used to prevent the grouping algorithm from accepting
-a rule that would also match known non-bug inputs.
-
-Full reduction is expensive when many test cases trigger a pattern
-already represented in the report directory.  With sorting enabled,
-\toolname therefore attempts to match a new candidate against existing bug
-groups before full minimization.  The \texttt{--no-sort} option disables
-structural classification and grouping, causing each candidate to be fully
-minimized and saved as an individual report rather than compared with
-existing bug groups.
-
-A test case is represented as a tree in which each node records base style state, modified style state, and children; text is represented
-explicitly as a node in the tree. The first node with modified style state is used as the start node
-for a rule because it anchors comparison relative to this modified node.  The
-rule represents the DOM structure relative to this anchor: it compares the
-modified node and its ancestor/descendant structure, rather than depending
-on that node's absolute location in the full page tree.  This allows
-structurally similar update patterns to match even when they occur in
-different test cases.
+As previously explained a test case is saved as a run subject which represents the dom tree 
+and the attached base\\modified style this structure 
+is used by the clustering algorithm. The first node with modified style state 
+is used as the start node because it anchors the tree comparison relative to 
+this modified node.  When merging the merged tree represents the DOM structure relative to this 
+anchor: it compares the modified node and its ancestor/descendant structure, 
+rather than depending on that node's absolute location in the full page tree.  
+This emphasizes a smaller local update pattern to compare with across different test cases.
 
 A group stores a merged representative tree and an extracted JSON rule.  To
-form a candidate rule, the implementation merges two trees recursively.
-Equal tags, values, and declarations are retained.  Disagreements are
-represented by the wildcard value \texttt{diff}.  The resulting rule
-consists of an ordered HTML pattern and the common base style state and modified style state
-requirements at the start node.  Matching checks both components: the
+form a candidate rule, the implementation merges two trees.
+Equal nodes and values are retained.  Discrepencies in values are
+represented by the wildcard value \texttt{diff}, meanwhile discrepencies in structure are delelting.  The resulting merged tree then has a rule extracted from it which 
+consists of an ordered HTML pattern with the attached base style state and modified style state.  
+Matching checks both components: the
 incoming subject must contain the ordered structural pattern and at least one
 matching element must have the required base style state and modified style state declarations.
 
 Before accepting either a match or a new group, the rule is validated against
-the safe repository. Rules with no modified-style requirement or with a
-trivial single-element pattern are rejected, and a rule is rejected if it
-matches any safe sample.  This is a conservative guard against a broad
+the safe repository. The safe repository is a small repository
+of known-safe subjects. It generates and executes subjects until the 
+configured safe directory contains a set of bug free \texttt{RunSubject} objects. 
+A rule is rejected if it matches any safe samples.  This is a guard against a broad
 structural description that would classify ordinary pages as bug instances.
-It makes group promotion depend
-on both bug examples and known non-bug examples.
 
-If an incoming candidate matches an existing rule, the runner skips the full
+If an incoming bug matches an existing rule, the runner skips the full
 reduction and saves it as another instance under that group.  Otherwise, it
-minimizes the candidate first.  The final minimized subject is then compared
+minimizes the bug first.  The final minimized subject is then compared
 against standalone reports.  Matching a standalone report promotes
 the two reports into a newly created \texttt{bug-group-*} directory and
 writes the extracted rule. Group artifacts are

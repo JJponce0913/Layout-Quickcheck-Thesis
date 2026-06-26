@@ -37,13 +37,13 @@ bias.  Fig.~\ref{fig:bug-detect} shows that reports continue to
 accumulate during the 60-minute window, and Table~\ref{tab:rq1-results}
 distinguishes report count from throughput and report-triggering rate.
 
-\begin{figure*}[!t]
+\begin{figure}[!t]
     \centering
-    \includegraphics[width=\textwidth]{figures/cumulative_bugs_detected_over_time_by_configuration.png}
+    \includegraphics[width=\linewidth]{figures/cumulative_bugs_detected_over_time_by_configuration.png}
     \caption{Cumulative bug reports for the weighted and no-weight
     configurations over the 60-minute evaluation window.}
     \label{fig:bug-detect}
-\end{figure*}
+\end{figure}
 
 \begin{table}[!t]
     \centering
@@ -105,20 +105,20 @@ developer-facing reports become, and whether the extra processing reduces
 fuzzing throughput.  Fig.~\ref{fig:rq2-style-elements} measures the former;
 Fig.~\ref{fig:rq2-firefox} measures the latter.
 
-\begin{figure*}[!t]
+\begin{figure}[!t]
     \centering
-    \includegraphics[width=\textwidth]{figures/firefox_style_elements.png}
+    \includegraphics[width=\linewidth]{figures/firefox_style_elements.png}
     \caption{Total CSS style elements in grouped Firefox reports before
     minimization, after minimization, and after clustering.}
     \label{fig:rq2-style-elements}
-\end{figure*}
-\begin{figure*}[!t]
+\end{figure}
+\begin{figure}[!t]
     \centering
-    \includegraphics[width=\textwidth]{figures/combined_minimization_and_clustering_time_over_time.png}
+    \includegraphics[width=\linewidth]{figures/combined_minimization_and_clustering_time_over_time.png}
     \caption{Cumulative minimization and clustering time for Firefox sorting
     and no-sorting configurations.}
     \label{fig:rq2-firefox}
-\end{figure*}
+\end{figure}
 
 \noindent\textbf{Outcomes:} The report-size results show that the clustering and minimization pipeline
 meaningfully changes the volume of a bug analysis needed.  Minimization reduces the
@@ -204,8 +204,8 @@ Firefox groups.
         Firefox & 1724982 & Table min-height overflow discrepancy & \textcolor{red}{Open} \\
         Firefox & 1724991 & Dynamic break-spaces invalidation inconsistency & \textcolor{red}{Open} \\
         Firefox & 1733276 & Display-inline margin line-wrapping inconsistency & \textcolor{red}{Open} \\
-        Firefox & 1735376 & Grid table-row height inconsistency & Closed \\
-        Firefox & 1735931 & Percent-sized grid-item height inconsistency & Closed \\
+        Firefox & 1735376 & Grid table-row height inconsistency & \textcolor{green!50!black}{Closed} \\
+        Firefox & 1735931 & Percent-sized grid-item height inconsistency & \textcolor{green!50!black}{Closed} \\
         Firefox & 1748891 & Sticky padding scrollport position inconsistency & \textcolor{red}{Open} \\
         Firefox & 1724999 & Layout Quick Check metabug & \textcolor{red}{Open} \\
         \bottomrule

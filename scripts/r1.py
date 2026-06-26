@@ -13,11 +13,41 @@ DEFAULT_SUMMARY_DIRS = [Path("bug_reports") / "tester"]
 DEFAULT_OUTPUT_DIR = Path("files") / "rq1"
 SNAPSHOT_PATTERN = re.compile(r"^run_summary_(\d+)s\.json$")
 HOURS_THRESHOLD_MINUTES = 240
+TITLE_FONT_SIZE = 24
+LABEL_FONT_SIZE = 22
+TICK_FONT_SIZE = 20
+LEGEND_FONT_SIZE = 20
+
+
+def format_run_name(name: str) -> str:
+    words = name.replace("-", " ").split()
+    replacements = {
+        "chromium": "Chromium",
+        "chrome": "Chrome",
+        "firefox": "Firefox",
+        "sort": "Sort",
+    }
+    return " ".join(replacements.get(word, word.capitalize()) for word in words)
+
+
 def execution_time_axis(max_minutes: float) -> tuple[float, str, float]:
     """Return the scale, label, and major tick interval for a time axis."""
     if max_minutes > HOURS_THRESHOLD_MINUTES:
         return 60, "Execution time (hours)", 1
     return 1, "Execution time (minutes)", 10
+
+
+def increase_plot_font_sizes(axis) -> None:
+    axis.title.set_fontsize(TITLE_FONT_SIZE)
+    axis.xaxis.label.set_fontsize(LABEL_FONT_SIZE)
+    axis.yaxis.label.set_fontsize(LABEL_FONT_SIZE)
+    axis.tick_params(axis="both", which="major", labelsize=TICK_FONT_SIZE)
+    axis.tick_params(axis="both", which="minor", labelsize=TICK_FONT_SIZE)
+
+    legend = axis.get_legend()
+    if legend is not None:
+        for text in legend.get_texts():
+            text.set_fontsize(LEGEND_FONT_SIZE)
 
 
 def main() -> None:
@@ -45,8 +75,7 @@ def main() -> None:
 
     comparison_series = []
     for summary_dir in args.summary_dirs:
-        output_dir = args.output_dir / summary_dir.name
-        comparison_series.append(create_graphs(summary_dir, output_dir, args.max_minutes))
+        comparison_series.append(create_graphs(summary_dir, args.max_minutes))
 
     if len(comparison_series) > 1:
         create_cumulative_comparison(comparison_series, args.output_dir, args.max_minutes)
@@ -54,7 +83,6 @@ def main() -> None:
 
 def create_graphs(
     summary_dir: Path,
-    output_dir: Path,
     max_minutes: float | None,
 ) -> dict[str, object]:
     snapshots = []
@@ -106,57 +134,11 @@ def create_graphs(
         minutes = [item["snapshot_seconds"] / 60 for item in snapshots]
 
     bugs_found = [item["bugs_found"] for item in snapshots]
-    tests_run = [item["tests_run"] for item in snapshots]
     endpoint_minutes = minutes[-1]
-    time_limit_minutes = max_minutes if max_minutes is not None else endpoint_minutes
-    time_scale, time_label, time_tick_interval = execution_time_axis(time_limit_minutes)
-    execution_time = [minute / time_scale for minute in minutes]
-    execution_limit = time_limit_minutes / time_scale
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    time_fig, time_ax = plt.subplots(figsize=(11, 6), dpi=140)
-    time_ax.plot(execution_time, bugs_found, marker="o", linewidth=2)
-
-    time_ax.set_title(
-        f"Cumulative Bugs Detected Over Time ({summary_dir.name}, {endpoint_minutes:g} min Run)"
-    )
-    time_ax.set_xlabel(time_label)
-    time_ax.set_ylabel("Detected bugs")
-    time_ax.set_xlim(0, execution_limit)
-    time_ax.set_ylim(0, max(bugs_found) + 2)
-    time_ax.xaxis.set_major_locator(MultipleLocator(time_tick_interval))
-    time_ax.grid(True, alpha=0.3)
-
-    time_fig.tight_layout()
-
-    time_output_path = (
-        output_dir / f"cumulative_bugs_detected_over_time_{endpoint_minutes:g}min.png"
-    )
-    time_fig.savefig(time_output_path)
-    print(f"Saved plot to {time_output_path}")
-
-    tests_fig, tests_ax = plt.subplots(figsize=(11, 6), dpi=140)
-    tests_ax.plot(tests_run, bugs_found, marker="o", linewidth=2)
-
-    tests_ax.set_title(
-        f"Cumulative Bugs Detected by Test Cases Executed ({summary_dir.name}, {endpoint_minutes:g} min Run)"
-    )
-    tests_ax.set_xlabel("Test cases executed")
-    tests_ax.set_ylabel("Detected bugs")
-    tests_ax.set_xlim(0, max(tests_run))
-    tests_ax.set_ylim(0, max(bugs_found) + 2)
-    tests_ax.grid(True, alpha=0.3)
-
-    tests_fig.tight_layout()
-
-    tests_output_path = (
-        output_dir / "cumulative_bugs_detected_by_test_cases_executed.png"
-    )
-    tests_fig.savefig(tests_output_path)
-    print(f"Saved plot to {tests_output_path}")
 
     return {
         "name": summary_dir.name,
+        "label": format_run_name(summary_dir.name),
         "minutes": minutes,
         "bugs_found": bugs_found,
         "endpoint_minutes": endpoint_minutes,
@@ -182,7 +164,7 @@ def create_cumulative_comparison(
             series["bugs_found"],
             marker="o",
             linewidth=2,
-            label=series["name"],
+            label=series["label"],
         )
 
     max_bugs_found = max(max(series["bugs_found"]) for series in comparison_series)
@@ -194,6 +176,7 @@ def create_cumulative_comparison(
     axis.xaxis.set_major_locator(MultipleLocator(time_tick_interval))
     axis.grid(True, alpha=0.3)
     axis.legend()
+    increase_plot_font_sizes(axis)
     figure.tight_layout()
 
     output_dir.mkdir(parents=True, exist_ok=True)

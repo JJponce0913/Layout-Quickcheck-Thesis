@@ -24,6 +24,27 @@ STYLE_REDUCTION_MACROS = (
     "StyleElementOriginalToClusteredReduction",
     "StyleElementMinimizedToClusteredReduction",
 )
+TITLE_FONT_SIZE = 20
+LABEL_FONT_SIZE = 18
+YTICK_FONT_SIZE = 10
+XTICK_FONT_SIZE = 18
+LEGEND_FONT_SIZE = 20
+
+
+def increase_plot_font_sizes(axis) -> None:
+    axis.title.set_fontsize(TITLE_FONT_SIZE)
+    axis.xaxis.label.set_fontsize(LABEL_FONT_SIZE)
+    axis.yaxis.label.set_fontsize(LABEL_FONT_SIZE)
+    axis.tick_params(axis="both", which="major", labelsize=YTICK_FONT_SIZE)
+    axis.tick_params(axis="both", which="minor", labelsize=XTICK_FONT_SIZE)
+
+    legend = axis.get_legend()
+    if legend is not None:
+        for text in legend.get_texts():
+            text.set_fontsize(LEGEND_FONT_SIZE)
+
+    for text in axis.texts:
+        text.set_fontsize(YTICK_FONT_SIZE)
 
 
 def minified_file(bug_directory: Path) -> Path | None:
@@ -125,12 +146,12 @@ def main() -> None:
     args = parser.parse_args()
 
     counts = collect_counts(args.results_directory)
-    labels = ["Grouped original\nreports", "Grouped minimized\nreports", "Clustered\ngroup output"]
-    colors = ["#64748b", "#2563eb", "#16a34a"]
+    labels = ["Original\nReports", "Minimized\nReports", "Clustered\nReports"]
+    colors = ["#dc2626", "#16a34a", "#2563eb"]
 
     figure, axis = plt.subplots(figsize=(7, 5), dpi=140)
     bars = axis.bar(labels, counts, color=colors)
-    axis.set_title("CSS Style Elements")
+    axis.set_title("CSS Style Elements Size By Report Type")
     axis.set_ylabel("Total CSS Properties")
     axis.grid(axis="y", alpha=0.3)
     axis.set_axisbelow(True)
@@ -143,6 +164,8 @@ def main() -> None:
             va="bottom",
             fontweight="bold",
         )
+
+    increase_plot_font_sizes(axis)
 
     original_to_minimized = 100 * (1 - counts[1] / counts[0])
     original_to_clustered = 100 * (1 - counts[2] / counts[0])
