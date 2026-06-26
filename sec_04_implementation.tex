@@ -1,4 +1,4 @@
-\section{IMPLEMENTATION}
+\section{Implementation}
 
 \toolname is implemented in Python as an end-to-end, feedback-free fuzzing
 pipeline for browser layout invalidation.  The implementation executes the serialized page in a real
@@ -8,6 +8,9 @@ pipeline then generates candidate reports, minimizes them, and groups
 structurally related reports.  The following sections describe the
 implementation: the layout oracle, the
 generation of web pages and bug candidates, and the clustering of reports.
+
+Fig.~\ref{fig:implementation-pipeline} summarizes the main stages of the
+\toolname implementation pipeline.
 
 \input{fig_implementation_pipeline}
 
@@ -197,10 +200,9 @@ on both bug examples and known non-bug examples.
 If an incoming candidate matches an existing rule, the runner skips the full
 reduction and saves it as another instance under that group.  Otherwise, it
 minimizes the candidate first.  The final minimized subject is then compared
-against existing groups and against standalone reports.  Matching a group
-adds the new instance to that group.  Matching a standalone report promotes
+against standalone reports.  Matching a standalone report promotes
 the two reports into a newly created \texttt{bug-group-*} directory and
-writes the extracted rule.  After every group update, group artifacts are
+writes the extracted rule. Group artifacts are
 recomputed so the merged representative and rule correspond to the instances
 currently stored in that directory.  The sorting time is measured separately
 and added to the run summary alongside minimization time; this makes the

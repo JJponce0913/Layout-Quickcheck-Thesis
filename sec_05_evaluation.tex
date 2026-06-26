@@ -1,4 +1,4 @@
-\section{EVALUATION}
+\section{Evaluation}
 
 Our evaluation of \toolname is guided by these fundamental questions:
 
@@ -20,7 +20,7 @@ respectively.
 \textbf{Experiment Setup:} Because no existing fuzzer specifically targets under-invalidation bugs,
  our evaluation focuses on \toolname’s efficiency and quality of the results it produces. 
  For RQ1, we run each browser with and without
-property weights for 60 minutes.  We save several characteristics of these runs including speed(number of tests ran per minute), bugs found, rate of bug discovery, and the overall execution time. During the 60 minute window every minute a snapshot of these metrics were saved to accurately track the metrics across time. This data is represented in ~\ref{tab::bug-detect} which shows the bugs detected over execution time and  ~\ref{tab:rq1-results} which showcases metrics at the end of the 60 minute window.
+property weights for 60 minutes.  We save several characteristics of these runs including speed(number of tests ran per minute), bugs found, rate of bug discovery, and the overall execution time. During the 60 minute window every minute a snapshot of these metrics were saved to accurately track the metrics across time. This data is represented in Fig.~\ref{fig:bug-detect}, which shows the bugs detected over execution time, and Table~\ref{tab:rq1-results}, which showcases metrics at the end of the 60 minute window.
 For RQ2, the evaluations compares Firefox runs with sorting enabled and disabled over a nine hour execution. We
 measure the number of css properties in the original reports, minimized reports and clustered reports, cumulative
 post-processing time of minimization and clustering, and execution time. Measuring total css properties takes into account only the bugs that are within a bug group as to not inflate the total css properties of grouped or minimized bugs that were never grouped. For RQ3, we report the status of
@@ -33,20 +33,23 @@ RQ1 establishes whether \toolname can repeatedly drive independent browser
 engines into under-invalidation behavior.  Property weighting is a secondary
 comparison: it biases generation toward selected CSS properties, while the
 unweighted configuration samples from the same property space without that
-bias.  Figure~\ref{fig:bug-detect} shows that reports continue to
+bias.  Fig.~\ref{fig:bug-detect} shows that reports continue to
 accumulate during the 60-minute window, and Table~\ref{tab:rq1-results}
 distinguishes report count from throughput and report-triggering rate.
 
-\begin{figure}[H]
+\begin{figure*}[!t]
     \centering
-    \includegraphics[width=\linewidth]{figures/cumulative_bugs_detected_over_time_by_configuration.png}
+    \includegraphics[width=\textwidth]{figures/cumulative_bugs_detected_over_time_by_configuration.png}
     \caption{Cumulative bug reports for the weighted and no-weight
     configurations over the 60-minute evaluation window.}
     \label{fig:bug-detect}
-\end{figure}
+\end{figure*}
 
-\begin{table}[H]
+\begin{table}[!t]
     \centering
+    \caption{Bug-discovery results across browser and
+    configurations.}
+    \label{tab:rq1-results}
     \renewcommand*{\arraystretch}{1.15}
     \begin{tabular}{l | rrr | rrr}
         \specialrule{.1em}{0em}{0em}
@@ -56,12 +59,8 @@ distinguishes report count from throughput and report-triggering rate.
         Chromium & \ChromiumNoWeightsSpeed & \ChromiumNoWeightsBugs & \ChromiumNoWeightsRate & \ChromiumWeightsSpeed & \ChromiumWeightsBugs & \ChromiumWeightsRate \\
         Firefox & \FirefoxNoWeightsSpeed & \FirefoxNoWeightsBugs & \FirefoxNoWeightsRate & \FirefoxWeightsSpeed & \FirefoxWeightsBugs & \FirefoxWeightsRate \\
         \hline
+        \multicolumn{7}{p{0.95\linewidth}}{\footnotesize\textit{Note:} Runs use a 60-minute execution window. Speed is measured in executed tests per minute; rate is bugs divided by executed tests.}
     \end{tabular}
-    \vspace{0.5em}
-    \caption{RQ1 bug-discovery results across browser and property-weight
-    configurations over a 60-minute execution window.  Speed is measured in
-    executed tests per minute; rate is bugs divided by executed tests.}
-    \label{tab:rq1-results}
 \end{table}
 
 \textbf{Outcomes:} Every configuration finds dozens of reports within 60 minutes: Chromium finds
@@ -103,23 +102,23 @@ elements from a report.  Clustering recognizes repeated reports and retains a
 shared rule and minimized representative, which can in turn be used to avoid full minimization for every
 bug found.  We therefore evaluate two linked outcomes: how much smaller the
 developer-facing reports become, and whether the extra processing reduces
-fuzzing throughput.  Figure~\ref{fig:rq2-style-elements} measures the former;
-Figure~\ref{fig:rq2-firefox} measures the latter.
+fuzzing throughput.  Fig.~\ref{fig:rq2-style-elements} measures the former;
+Fig.~\ref{fig:rq2-firefox} measures the latter.
 
-\begin{figure}[t]
+\begin{figure*}[!t]
     \centering
-    \includegraphics[width=\linewidth]{figures/firefox_style_elements.png}
+    \includegraphics[width=\textwidth]{figures/firefox_style_elements.png}
     \caption{Total CSS style elements in grouped Firefox reports before
     minimization, after minimization, and after clustering.}
     \label{fig:rq2-style-elements}
-\end{figure}
-\begin{figure}[t]
+\end{figure*}
+\begin{figure*}[!t]
     \centering
-    \includegraphics[width=\linewidth]{figures/combined_minimization_and_clustering_time_over_time.png}
+    \includegraphics[width=\textwidth]{figures/combined_minimization_and_clustering_time_over_time.png}
     \caption{Cumulative minimization and clustering time for Firefox sorting
     and no-sorting configurations.}
     \label{fig:rq2-firefox}
-\end{figure}
+\end{figure*}
 
 \noindent\textbf{Outcomes:} The report-size results show that the clustering and minimization pipeline
 meaningfully changes the volume of a bug analysis needed.  Minimization reduces the
@@ -169,9 +168,9 @@ developers.  We also reproduce \MozillaBugs{} human-submitted Mozilla bugs,
 showing that the oracle can reach known under-invalidation behavior.
 
 Clustering provides complementary evidence about report diversity before
-manual validation.  Figure~\ref{fig:rq3-firefox-diversity} shows how reports
+manual validation.  Fig.~\ref{fig:rq3-firefox-diversity} shows how reports
 are divided into bug groups and single bugs over time, while
-Figure~\ref{fig:rq3-bug-group-sizes} shows the final size distribution of the
+Fig.~\ref{fig:rq3-bug-group-sizes} shows the final size distribution of the
 Firefox groups.
 
 \begin{figure*}[!t]
@@ -184,6 +183,8 @@ Firefox groups.
 
 \begin{table}[t]
     \centering
+    \caption{Status of bug reports submitted to Chrome and Firefox.}
+    \label{tab:rq3-reported-bugs}
     \scriptsize
     \setlength{\tabcolsep}{2pt}
     \begin{tabular}{l|l|p{0.6\columnwidth}|l}
@@ -209,17 +210,15 @@ Firefox groups.
         Firefox & 1724999 & Layout Quick Check metabug & \textcolor{red}{Open} \\
         \bottomrule
     \end{tabular}
-    \caption{Status of bug reports submitted to Chrome and Firefox.}
-    \label{tab:rq3-reported-bugs}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure*}[!t]
     \centering
-    \includegraphics[width=\linewidth]{figures/bug_groups_and_single_bugs_over_time.png}
+    \includegraphics[width=\textwidth]{figures/bug_groups_and_single_bugs_over_time.png}
     \caption{Bug-group and single-bug counts by total detected reports in
     the Firefox sorting run.}
     \label{fig:rq3-firefox-diversity}
-\end{figure}
+\end{figure*}
 
 \noindent\textbf{Outcomes:} Table~\ref{tab:rq3-reported-bugs} establishes
 that \toolname's reports are actionable beyond the experimental oracle.  It

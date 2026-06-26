@@ -13,7 +13,7 @@ A browser must load applications and content over the network;
   and render the application user interface to the screen.
 The rendering step is performed by
   the browser's \emph{rendering engine}~\cite{wbe};
-  \Cref{fig:rendering-pipeline} is high-level diagram
+  Fig.~\ref{fig:rendering-pipeline} is a high-level diagram
   of this rendering pipeline.
 The main production browser engines are
   Chrome's Blink engine~\cite{chromiumBlink},
@@ -27,8 +27,9 @@ These engines require substantial and sustained investment;
   and invests around \$1 billion annually in the web platform%
   ~\cite{owa2025googleSearchMonopoly}.
   
-\begin{figure*}
-  \includegraphics[width=\linewidth]{rendering-pipeline.png}
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/rendering-pipeline.png}
   \caption{
     A high-level diagram of the browser rendering pipeline.
     Of these steps, layout is most complex,
@@ -38,7 +39,7 @@ These engines require substantial and sustained investment;
       performance.
     Image reused with permission.
   }
-  \label{fig:rendering-pipeline}.
+  \label{fig:rendering-pipeline}
 \end{figure*}
 
 This paper focuses on \emph{layout},
