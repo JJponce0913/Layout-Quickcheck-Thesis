@@ -12,11 +12,28 @@ DEFAULT_SUMMARY_DIRS = [Path("bug_reports") / "tester"]
 DEFAULT_OUTPUT_DIR = Path("graphs") / "r3"
 SNAPSHOT_PATTERN = re.compile(r"^run_summary_(\d+)s\.json$")
 DATA_FILE = Path(__file__).resolve().parents[1] / "data.tex"
+TITLE_FONT_SIZE = 24
+LABEL_FONT_SIZE = 22
+TICK_FONT_SIZE = 20
+LEGEND_FONT_SIZE = 20
 FIREFOX_SORTING_MACROS = {
     "FirefoxSortingReports": "bugs_found",
     "FirefoxSortingGroups": "bug_group_count",
     "FirefoxSortingSingleBugs": "single_bug_count",
 }
+
+
+def increase_plot_font_sizes(axis) -> None:
+    axis.title.set_fontsize(TITLE_FONT_SIZE)
+    axis.xaxis.label.set_fontsize(LABEL_FONT_SIZE)
+    axis.yaxis.label.set_fontsize(LABEL_FONT_SIZE)
+    axis.tick_params(axis="both", which="major", labelsize=TICK_FONT_SIZE)
+    axis.tick_params(axis="both", which="minor", labelsize=TICK_FONT_SIZE)
+
+    legend = axis.get_legend()
+    if legend is not None:
+        for text in legend.get_texts():
+            text.set_fontsize(LEGEND_FONT_SIZE)
 
 
 def main() -> None:
@@ -67,21 +84,18 @@ def create_graphs(summary_dir: Path, output_dir: Path) -> list[dict[str, float]]
     elapsed_hours = [snapshot["runtime_seconds"] / 3600 for snapshot in snapshots]
     bug_groups = [snapshot["bug_group_count"] for snapshot in snapshots]
     single_bugs = [snapshot["single_bug_count"] for snapshot in snapshots]
-    endpoint_minutes = snapshots[-1]["runtime_seconds"] / 60
-
     fig, ax = plt.subplots(figsize=(11, 6), dpi=140)
     ax.plot(elapsed_hours, bug_groups, marker="o", linewidth=2, label="Bug groups")
     ax.plot(elapsed_hours, single_bugs, marker="o", linewidth=2, label="Single bugs")
 
-    ax.set_title(
-        f"Bug Groups and Single Bugs Over Time ({endpoint_minutes:g} min Test Run)"
-    )
+    ax.set_title("Bug Groups and Single Bugs Over Time")
     ax.set_xlabel("Execution time (hours)")
     ax.set_ylabel("Count")
     ax.set_xlim(0, max(elapsed_hours))
     ax.set_ylim(0, max(max(bug_groups), max(single_bugs)) + 2)
     ax.grid(True, alpha=0.3)
     ax.legend()
+    increase_plot_font_sizes(ax)
     fig.tight_layout()
 
     output_path = (
