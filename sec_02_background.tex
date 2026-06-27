@@ -12,7 +12,7 @@ A browser must load applications and content over the network;
   execute applications and react to user input;
   and render the application user interface to the screen.
 The rendering step is performed by
-  the browser's \emph{rendering engine}~\cite{wbe};
+  the browser's \emph{rendering engine}~\cite{panchekha2024reusing};
   Fig.~\ref{fig:rendering-pipeline} is a high-level diagram
   of this rendering pipeline.
 The main production browser engines are
@@ -20,7 +20,9 @@ The main production browser engines are
   Firefox's Gecko engine~\cite{mozillaGecko},
   and Safari's WebKit engine~\cite{webkitEngine},
   which power both the named browsers and many others,
-  such as Microsoft Edge, Samsung Browser, and others~\cite{???}.
+  such as Microsoft Edge and Samsung Browser.
+Other browser-engine projects include Pale Moon, Ladybird, and Servo%
+  ~\cite{paleMoon,ladybird,servo}.
 These engines require substantial and sustained investment;
   for example, Open Web Advocacy estimates
   that Google provides roughly 90\% of Blink development funding
@@ -44,7 +46,7 @@ These engines require substantial and sustained investment;
 
 This paper focuses on \emph{layout},
   which involves computing the size and position of every web page element.
-Layout is one of the most complex parts of the rendering pipeline~\cite{wbe},
+Layout is one of the most complex parts of the rendering pipeline~\cite{panchekha2024reusing},
   and, because browser rendering is performed after every user interaction,
   it must be highly optimized%
   ~\cite{megatron,kosaka2018insideBrowserPart3,mdnWebPerformance}
@@ -82,8 +84,6 @@ Chrome would then require four rendering cycles
 Needless to say, constructing such an unlikely sequence
   of page elements, styles, and changes to those styles
   would be difficult for a manual testing approach.
-
-\todo{Put these cites somewhere if we need them: \cite{mozillaFuzzing,ventuzelo2023browserFuzzing,araoz2026webFuzzing}.}
 
 \subsection{Browser Fuzzing}
 

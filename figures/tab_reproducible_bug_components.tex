@@ -1,0 +1,84 @@
+\begin{table*}[t]
+  \centering
+  \caption{Components of converted browser bug test cases.}
+  \label{tab:reproducible-bug-components}
+  \scriptsize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.12}
+  \begin{tabular}{@{}p{0.10\textwidth}p{0.35\textwidth}p{0.34\textwidth}p{0.15\textwidth}@{}}
+    \toprule
+    Case & HTML tree & Initial styles & Style mutation \\
+    \midrule
+    166194 &
+    \texttt{div > (text + div > div > text) + div} &
+    \texttt{outer, inner, after: clear:both; action, text: float:left; middle: display:none; margin-bottom:10em} &
+    \texttt{middle.display = inline-block} \\
+    \midrule
+
+    648383 &
+    \texttt{div + div + div > div} &
+    \texttt{first, resizeMe, third: float:left; resizeMe: width:100\%} &
+    \texttt{resizeMe.height = 100px} \\
+    \midrule
+
+    1733276-2 &
+    \texttt{div > (text + div)} &
+    \texttt{container: width:100px; test: display:none; margin-left:150px} &
+    \texttt{test.display = inline} \\
+    \midrule
+
+    1733276-3 &
+    \texttt{div > (text + div)} &
+    \texttt{container: width:100px; test: display:none; padding-left:150px} &
+    \texttt{test.display = inline} \\
+    \midrule
+
+    Overflow/move &
+    \texttt{div > div > div} &
+    \texttt{absolute: position:absolute; left:200px; top:0; overflow:hidden; inner2: height:1000px; overflow:auto} &
+    \texttt{left = 100px; top = 100px} \\
+    \midrule
+
+    Letter spacing &
+    \texttt{text + pre} &
+    \texttt{pre: display:inline; letter-spacing:1em} &
+    \texttt{width = 50px; layout; width = auto} \\
+    \midrule
+
+    Table display &
+    \texttt{table > tr > td > div} &
+    \texttt{td: width:100px; height:100\%; element: display:block; height:100\%} &
+    \texttt{element.display = table} \\
+    \midrule
+
+    Scroll area &
+    \texttt{div > (div + div)} &
+    \texttt{scrollArea: 200px x 200px; overflow:scroll; abspos: position:absolute} &
+    \texttt{scroll = (50,50); width = 220px} \\
+    \midrule
+
+    Grid/table &
+    \texttt{div > (div + (div > div) + div)} &
+    \texttt{five: display:table-column; grid-auto-columns:20px; four: display:table; two: display:table-row} &
+    \texttt{five.display = grid} \\
+    \midrule
+
+    Multicol/flex &
+    \texttt{div > (div + div > (div + div))} &
+    \texttt{multicol: columns:4; height:100px; flexbox: display:flex; target: height:50px; contain:size} &
+    \texttt{target.height = 900px} \\
+    \midrule
+
+    Abspos inline &
+    \texttt{text + span > div} &
+    \texttt{span: position:relative; abspos: position:absolute} &
+    \texttt{vertical-align = top} \\
+    \bottomrule
+    \multicolumn{4}{p{0.97\textwidth}}{\footnotesize\textit{Note:}
+      We took test cases from browser bug reports and converted them into
+      equivalent \toolname test cases. These conversions show that, as long
+      as \toolname can generate an HTML tree, its initial styles, and a style
+      mutation, it can generate test cases that reproduce these bugs. Only
+      declarations relevant to each mutation are shown.}
+  \end{tabular}
+\end{table*}

@@ -13,7 +13,8 @@ Browser makers therefore invest heavily
 
 Browser developers use fuzzers to find both
   security and correctness bugs.
-On the security side, fuzzers such as \todo{XYZ}~\cite{domato,???}
+On the security side, fuzzers such as Domato, Grammarinator,
+  Fuzzowski, and MFFA~\cite{domato,grammarinator,fuzzowski,mffa}
   detect crashes in parsers, network libraries, and media engines,
   which are both exposed to untrusted input
   and must maximize performance.
@@ -31,13 +32,13 @@ However, all of these approaches struggle to
 
 \emph{Invalidation} refers to the process by which
   the browser updates internal data structures
-  in response to style changes~\cite{wbe}.
+  in response to style changes~\cite{panchekha2024reusing}.
 Since style changes are frequent
   (often every frame, 60 or even 120 times per second,
   in response to animations),
   substantial research has been devoted
   to designing efficient invalidation procedures%
-  ~\cite{pldi25-megatron,medea}.
+  ~\cite{megatron,liu2023medea}.
 Generally, browsers attempt to update \emph{as little}
   of their internal data structures as possible;
   however, updating \emph{too little} of this internal state
@@ -54,7 +55,7 @@ Modern invalidation algorithms like LayoutNG~\cite{kilpatrick2021layoutng}
   while some promising algorithms~\cite{mozilla2006reflow}
   have failed precisely because under-invalidation bugs proved
   difficult to find and fix.
-  
+
 To combat these issues, this paper introduces
   a new oracle that detects under-invalidation bugs
   via \emph{self-differential testing},

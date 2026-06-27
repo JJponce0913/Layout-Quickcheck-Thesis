@@ -23,6 +23,14 @@ core idea of the oracle. For each test case, \toolname asks
 whether the browser produces the same layout for the same final page state
 when that state is reached in two different ways.
 
+To validate that this oracle captures real under-invalidation failures,
+we converted 11 historical browser bug reports into equivalent \toolname
+test cases. Table~\ref{tab:reproducible-bug-components} decomposes each
+case into the three components \toolname generates: an HTML tree, initial
+styles, and a style mutation.
+
+\input{figures/tab_reproducible_bug_components}
+
 This differs from most existing browser fuzzers because \toolname does not
 treat crashes, security violations, API exceptions, or cross-browser
 differences as its main correctness signal. Crash-oriented fuzzers can find
