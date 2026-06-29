@@ -1,42 +1,56 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-Our evaluation of \toolname is guided by these fundamental questions:
+Our evaluation of \toolname answers three research questions:
 
-\noindent\textbf{RQ1: Is \toolname at triggering an
-\UnderInvalidation bugs?}
+\begin{enumerate}
+\item[RQ1] Is \toolname effective at finding \UnderInvalidation bugs?
+\item[RQ2] Does minimization and clustering reduce review load?
+\item[RQ3] Does \toolname find novel under-invalidation bugs?
+\end{enumerate}
 
-\noindent\textbf{RQ2: Do minimization and clustering reduce report complexity?}
+We test \toolname on Google Chrome~\todo{XXX.XX}
+  and Mozilla Firefox~\todo{XXX.XX}
+  using Selenium~\todo{XX.XX} via
+  chromedriver~\todo{XX.XX}
+ and geckodriver~\todo{XX.XX}.
+\toolname itself runs on Python~\todo{X.XX}.
 
-\noindent\textbf{RQ3: Does \toolname find confirmed under-invalidation
-bugs?}
-
-\textbf{Benchmarks:} Table~\ref{tab:benchmarks} summarizes the browser
-targets evaluated by \toolname.  Our evaluation uses Chromium,
-which exercises the Blink layout engine, and Firefox, which exercises the
-Gecko layout engine.  \toolname uses ChromeDriver and GeckoDriver,
-respectively.
-\input{figures/tab_benchmarks}
-
-\textbf{Experiment Setup:} Because no existing fuzzer specifically targets under-invalidation bugs,
- our evaluation focuses on \toolname’s efficiency and quality of the results it produces. 
- For RQ1, we run each browser with and without
-property weights for 60 minutes.  We save several characteristics of these runs including speed(number of tests ran per minute), bugs found, rate of bug discovery, and the overall execution time. During the 60 minute window every minute a snapshot of these metrics were saved to accurately track the metrics across time. This data is represented in Fig.~\ref{fig:bug-detect}, which shows the bugs detected over execution time, and Table~\ref{tab:rq1-results}, which showcases metrics at the end of the 60 minute window.
-For RQ2, the evaluations compares Firefox runs with sorting enabled and disabled over a nine hour execution. We
-measure the number of css properties in the original reports, minimized reports and clustered reports, cumulative
-post-processing time of minimization and clustering, and execution time. Measuring total css properties takes into account only the bugs that are within a bug group as to not inflate the total css properties of grouped or minimized bugs that were never grouped. For RQ3, we report the status of
-confirmed bugs and use report groups and single
-bugs to describe the diversity of the report repository. 
+Because no existing fuzzer specifically targets under-invalidation bugs,
+ our evaluation focuses on \toolname’s efficiency
+ and the quality of the results it produces. 
+For RQ1, we fuzz each browser for 60 minutes,
+  and additionally compare the impact of
+  \toolname's tweaks to generation of
+  the \texttt{content-visibility} and \texttt{display} properties.
+For RQ2, we perform a longer, nine-hour fuzzing run on Mozilla Firefox
+  and examine the size of original, minimized, and clustered bugs.
+For RQ3, we report on \toolname-generated bugs
+  that we have filed in the Google Chrome and Mozilla Firefox bug trackers.
+Note that RQ3 under-states the impact of \toolname on Mozilla Firefox:
+  after a pilot, the Mozilla developers chose to run \toolname
+  in Grizzly, Mozilla's internal fuzzing tool-chain~\cite{grizzly},
+  so as to detect bugs before they make it into
+  a user-visible release.
 
 \subsection{RQ1: Finding Under-Invalidation Reports}
 
-RQ1 establishes whether \toolname can repeatedly drive independent browser
-engines into under-invalidation behavior.  Property weighting is a secondary
-comparison: it biases generation toward selected CSS properties, while the
-unweighted configuration samples from the same property space without that
-bias.  Fig.~\ref{fig:bug-detect} shows that reports continue to
-accumulate during the 60-minute window, and Table~\ref{tab:rq1-results}
-distinguishes report count from throughput and report-triggering rate.
+RQ1 asks whether \toolname
+  is effective at triggering under-invalidation behavior
+  in Chrome and Firefox.
+As a secondary goal, we also test \toolname's tweaks to
+  the \texttt{content-visibility} and \texttt{display} properties,
+  which are implemented as default property weights.
+\Cref{fig:bug-detect} shows bug counts over time
+  for all four tested configurations.
+Every configuration finds
+  dozens of reports within 60 minutes:
+  Chromium finds \ChromiumNoWeightsBugs{} reports without property weights
+  and \ChromiumWeightsBugs{} reports with property weights,
+  while Firefox finds \FirefoxNoWeightsBugs{}
+  and \FirefoxWeightsBugs{} reports, respectively.
+The large counts in each case demonstrate that
+  \toolname reliably finds under-invalidation bugs.
 
 \begin{figure}[!t]
     \centering
@@ -64,31 +78,50 @@ distinguishes report count from throughput and report-triggering rate.
     \end{tabular}
 \end{table}
 
-\textbf{Outcomes:} Every configuration finds dozens of reports within 60 minutes: Chromium finds
-\ChromiumNoWeightsBugs{} reports without property weights and
-\ChromiumWeightsBugs{} reports with property weights, while Firefox finds
-\FirefoxNoWeightsBugs{} and \FirefoxWeightsBugs{} reports, respectively.  The nonzero rates in both Blink and Gecko show
-that \toolname reaches the target behavior in two independent layout engines,
-rather than depending on one browser-specific implementation.
-
-The weighted comparison explains how configuration choice affects that
-ability.  In Firefox, weighting raises the report count from
-\FirefoxNoWeightsBugs{} to \FirefoxWeightsBugs{} and the report-triggering rate
-from \FirefoxNoWeightsRate{} to \FirefoxWeightsRate{}, while throughput remains
-nearly unchanged (\FirefoxNoWeightsSpeed{} versus \FirefoxWeightsSpeed{} tests per
-minute).  In Chromium, weighting increases throughput but does not improve
-discovery rate: the unweighted configuration produces more reports
-(\ChromiumNoWeightsBugs{} versus \ChromiumWeightsBugs{}) and a higher
-report-triggering rate (\ChromiumNoWeightsRate{} versus
-\ChromiumWeightsRate).  Thus, higher throughput alone does not explain 
-the usefulness of property weights depends on the browser engine and
-the properties they emphasize.
+\Cref{tab:rq1-results} shows numerical results
+  for candidate generation speed,
+  total bug count, and bug detection rate.
+Over all, \toolname tests
+  hundreds of bug candidates per second in both browsers
+  and typically finds between one and two bugs per minute.
+This allows for a fine-grained comparison of
+  the effect of \toolname's default property weights.
+In Firefox, weighting raises the candidate count
+  from \FirefoxNoWeightsBugs{} to \FirefoxWeightsBugs{}
+  and the bug count from \FirefoxNoWeightsRate{} to \FirefoxWeightsRate{},
+  while throughput remains nearly unchanged
+  (\FirefoxNoWeightsSpeed{} versus \FirefoxWeightsSpeed{} tests per minute).
+In other words, the default weights allow \toolname
+  to find more bugs in Firefox at no additional cost.
+In Chromium,
+  weighting increases throughput
+  but does not improve discovery rate:
+  the unweighted configuration produces more reports
+  (\ChromiumNoWeightsBugs{} versus \ChromiumWeightsBugs{})
+  and a higher report-triggering rate
+  (\ChromiumNoWeightsRate{} versus \ChromiumWeightsRate). 
+The difference is due to differences in how Chrome and Firefox
+  implement the \texttt{content-visibility} property.
+Firefox's implementation does not generate false positives,
+  so generating this property or not has little effect on Firefox;
+  meanwhile, the higher probability of \texttt{display}
+  raises the total number of bugs found.
+By contrast, Chrome's implementation of \texttt{content-visibility}
+  does cause false positives, which causes \toolname
+  to fruitlessly attempt to minimize the false positive,
+  until it is minimized all the way to zero modified properties,
+  at which point the bug is useless.
+Disabling this property thus dramatically reduces
+  the number of minimization steps needed,
+  which explains the increased throughput,
+  while also reducing false positives,
+  explaining the reduced bug rate.
 
 \begin{center}
 \fbox{
 \begin{minipage}{0.95\linewidth}
 \textbf{RQ1:} \toolname finds under-invalidation reports in both Chromium and
-Firefox within one hour.  Property weights improves discovery rate, but their
+Firefox within one hour.  Its default weights improve bug discovery, though their
 benefit is browser-dependent rather than universal.
 \end{minipage}
 }
@@ -96,15 +129,32 @@ benefit is browser-dependent rather than universal.
 
 \subsection{RQ2: Reducing Developer Triage Work}
 
-Finding a bug is most useful when it is easy to understand and analyze.  RQ2 asks
-whether minimization and clustering reduce that burden, in addition it is important to examine the effeciency impacts.  
-Minimization removes unnecessary CSS style
-elements from a report.  Clustering recognizes repeated reports and retains a
-shared rule and minimized representative, which can in turn be used to avoid full minimization for every
-bug found.  We therefore evaluate two linked outcomes: how much smaller the
-developer-facing reports become, and whether the extra processing reduces
-fuzzing throughput.  Fig.~\ref{fig:rq2-style-elements} measures the former;
-Fig.~\ref{fig:rq2-firefox} measures the latter.
+A bug is most useful when it is easy to understand and analyze. 
+RQ2 asks whether minimization and clustering reduce the burden
+  of understanding and analyzing the bug.
+As a secondary goal, we asks about
+  the impact of minimization and clustering on bug discovery speed.
+Both are measured on a nine-hour fuzzing run of Mozilla Firefox,
+  with \toolname's default weights.
+\Cref{fig:rq2-style-elements} shows the size of the generated bugs,
+  under three different conditions:
+  without either minimization or clustering;
+  after minimization but not clustering;
+  and then after clustering, considering the template for each cluster.
+Size is measured by the total number of CSS properties
+  in the \todo{base} styles of the resulting bugs,
+  though similar results would be seen for counting
+  elements or modified styles.
+Minimization reduces the total number of CSS
+  in generated bugs by \StyleElementOriginalToMinimizedReduction,
+  relative to the original reports.
+Combining minimization with clustering
+  reduces the style-element volume further,
+  by \StyleElementMinimizedToClusteredReduction\ relative to minimized reports.
+Clustering with minimization thus results in
+  a \StyleElementOriginalToClusteredReduction\ reduction,
+  a dramatic reduction that substantially lowers the review burden
+  for developers using \toolname.
 
 \begin{figure}[!t]
     \centering
@@ -121,58 +171,37 @@ Fig.~\ref{fig:rq2-firefox} measures the latter.
     \label{fig:rq2-firefox}
 \end{figure}
 
-\noindent\textbf{Outcomes:} The report-size results show that the clustering and minimization pipeline
-meaningfully changes the volume of a bug analysis needed.  Minimization reduces the
-style elements in grouped reports by \StyleElementOriginalToMinimizedReduction
-relative to the original reports.  Combining minimization with clustering
-reduces the style-element volume by
-\StyleElementOriginalToClusteredReduction\ relative to originals and by
-\StyleElementMinimizedToClusteredReduction\ relative to minimized reports.
-Clustering removes a significant amount of repeated work across reports that
-represent the same behavior. \toolname retains the group's shared rule and minimized
-representative instead of independently minimizing and inspecting the new
-report. Developers can therefore focus on one representative report per
-behavior rather than repeatedly examining equivalent reports.
-
-In addition the minimization-and-sorting pipeline accounts for only
-\RuntimePercentMinClust\ of the Firefox sorting run's runtime.
-Moreover, specifically the sorting of bug reports into bug groups does not introduce an overhead;
-instead, it reduces post-processing cost when compared to simply minimizing each bug.
-At the latest common snapshot, the sorting configuration executes
-$\sim$130,640 test cases, compared with $\sim$126,210 without sorting, while
-spending $\sim$4,550 seconds on minimization and sorting rather than
-$\sim$5,890 seconds without sorting.  When a report matches an existing
-group, \toolname can reuse that group's representative instead of fully
-minimizing the new report.  Consequently, sorting reduces cumulative
-post-processing time by $\sim$22.6\% and enables $\sim$4,430 additional tests
-to run. 
+The minimization-and-clustering pipeline
+  accounts for \RuntimePercentMinClust\ the nine-hour Firefox run's runtime.
+However, as shown in \Cref{fig:rq2-firefox},
+  clustering actually reduces the minimization-and-clustering time:
+  the clustering configuration executes $\sim$130,640 test cases,
+  compared with $\sim$126,210 without clustering,
+  and spends $\sim$4,550 seconds on minimization and clustering
+  rather than $\sim$5,890 seconds without clustering.
+This is because,
+  when a newly-generated bug matches the template
+  of an existing cluster, \toolname can skip minimizing the new bug.
+Consequently, clustering
+  reduces cumulative post-processing time by $\sim$22.6\%
+  and enables $\sim$4,430 additional tests to run. 
 
 \begin{center}
 \fbox{
 \begin{minipage}{0.95\linewidth}
-\textbf{RQ2:} Minimization and clustering make reports substantially easier
-to dissect while preserving, and in this experiment improving, fuzzing
-throughput.  They reduce both the size of individual reports and the repeated
-work spent on reports already represented by a bug group.
+\textbf{RQ2:} Minimization and clustering substantially reduce
+  the burden of reviewing generated bugs
+  at relatively low additional elapsed time.
 \end{minipage}
 }
 \end{center}
 
 \subsection{RQ3: Finding Confirmed Bugs}
 
-The candidate reports measured in RQ1 are not, by themselves, evidence of
-distinct root-cause bugs.  RQ3 therefore asks whether \toolname produces
-reports that survive external developer review.  \toolname produced
-\NumBugsNovel{} confirmed under-invalidation bugs; Table~\ref{tab:rq3-reported-bugs} records their
-current statuses.  \NumBugsFixed{} of these reports were fixed or closed by
-developers.  We also reproduce \MozillaBugs{} human-submitted Mozilla bugs,
-showing that the oracle can reach known under-invalidation behavior.
-
-Clustering provides complementary evidence about report diversity before
-manual validation.  Fig.~\ref{fig:rq3-firefox-diversity} shows how reports
-are divided into bug groups and single bugs over time, while
-Fig.~\ref{fig:rq3-bug-group-sizes} shows the final size distribution of the
-Firefox groups.
+The bugs found in RQ1 and RQ2 are not, by themselves,
+  evidence of distinct root-cause bugs.
+RQ3 therefore asks whether \toolname finds
+  a diverse collection of bugs that can survive external review.
 
 \begin{figure*}[!t]
     \centering
@@ -181,6 +210,47 @@ Firefox groups.
     one bar.}
     \label{fig:rq3-bug-group-sizes}
 \end{figure*}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/firefox-sort/bug_groups_and_single_bugs_over_time.png}
+    \caption{Bug-group and single-bug counts by total detected reports in
+    the Firefox sorting run.}
+    \label{fig:rq3-firefox-diversity}
+\end{figure}
+
+\Cref{fig:rq3-bug-group-sizes} shows the final distribution of bug groups
+  for the nine-hour Firefox run in RQ2;
+  there are \todo{37} singleton bugs collected into a single bar.
+As is typical for fuzzers, the largest cluster is quite large,
+  with 203 total bugs, roughly a third of all bugs found in this run,
+  but the total number of bug clusters is large,
+  showing that \toolname finds a diversity of different bugs.
+\Cref{fig:rq3-diversity} shows how the number of bug groups
+  and singleton bugs changes over time.
+After a rapid increase over the first three hours of the run,
+  the number of singleton bugs reaches a rough steady state,
+  as does the total number of bug groups.
+This is because, while \toolname continues to test new bug candidates,
+  and while a substantial fraction
+  continue to trigger an under-invalidation bug,
+  the clustering algorithm largely assigns these bugs to existing clusters.
+In a long enough run, we expect that \toolname would generate
+  multiple of every kind of bug that it could generate,
+  and the number of singleton bugs would eventually approach 0
+  while the number of bug clusters would hit some maximum.%
+\footnote{Perhaps roughly 80, based on the number of bug groups
+  plus the number of singleton bugs at the end of the run.}
+
+Simply grouping bugs is not enough to confirm that the bugs are novel.
+\Cref{tab:rq3-reported-bugs} thus lists \NumBugsNovel{} bugs
+  reported by the authors to the Google and Mozilla bug trackers,
+  along with their bug tracker status as of the time of submission.
+\todo{All} bugs have been accepted by the developers.
+\NumBugsFixed{} of these bugs have additionally been
+  fixed or closed by developers,
+  showing that the bugs are not only valuable to developers
+  but also fixable.
 
 \begin{table}[t]
     \centering
@@ -213,43 +283,13 @@ Firefox groups.
     \end{tabular}
 \end{table}
 
-\begin{figure}[!t]
-    \centering
-    \includegraphics[width=\columnwidth]{figures/firefox-sort/bug_groups_and_single_bugs_over_time.png}
-    \caption{Bug-group and single-bug counts by total detected reports in
-    the Firefox sorting run.}
-    \label{fig:rq3-firefox-diversity}
-\end{figure}
-
-\noindent\textbf{Outcomes:} Table~\ref{tab:rq3-reported-bugs} establishes
-that \toolname's reports are actionable beyond the experimental oracle.  It
-produced \NumBugsNovel{} confirmed bugs, and
-\NumBugsFixed{} were fixed or closed.  These outcomes provide external evidence
-that the tool reaches real under-invalidation defects rather than only
-reporting test artifacts.
-
-The clustering results provide evidence that \toolname discovers a diverse set
-of potential bugs rather than merely generating many syntactic variations of
-the same behavior. The
-clustering process groups reports with shared behavior while retaining a
-minimized representative for each group.  At the latest common snapshot, the
-Firefox sorting run produces \FirefoxSortingReports{} reports across
-\FirefoxSortingGroups{} groups and \FirefoxSortingSingleBugs{} unmatched reports.
-The number of groups, each represented by distinct HTML
-and CSS combinations, indicates that the report repository contains
-substantial behavioral variation rather than a single bug expressed
-repeatedly.  These counts are evidence of potential diversity, not confirmed
-root-cause-bug counts; confirmation of novelty comes from the submitted
-reports reviewed by browser developers in
-Table~\ref{tab:rq3-reported-bugs}.
-
 \begin{center}
 \fbox{
 \begin{minipage}{0.95\linewidth}
-\textbf{RQ3:} \toolname finds confirmed under-invalidation bugs: it produced
-\NumBugsNovel{} confirmed bugs, of which
-\NumBugsFixed{} were fixed or closed.  Clustering helps further separate recurring
-reports from candidates to make independent validation easier.
+\textbf{RQ3:} \toolname finds
+  a substantial diversity of under-invalidation bugs,
+  including \NumBugsNovel{} confirmed bugs,
+  of which \NumBugsFixed{} have been fixed or closed.
 \end{minipage}
 }
 \end{center}
