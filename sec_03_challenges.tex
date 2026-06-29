@@ -1,178 +1,170 @@
 \section{Challenges and Solutions}
-To address the limitations of conventional browser fuzzing for layout
-invalidation correctness, we introduce \toolname: a system for
-finding, minimizing, and grouping under-invalidation bugs in modern web
-browser layout engines. In the following, we outline core challenges
-that shape \toolname's design, along with their solutions aimed
-at effectively fuzzing browser layout invalidation.
+
+To address the limitations of conventional browser fuzzing
+  for layout under-invalidation bugs, we introduce \toolname:
+  a fuzzer that finds, minimizes, and groups under-invalidation bugs
+  in product web browser layout engines.
+\toolname's design is shaped by three key challenges.
 
 \subsection{Challenge 1: Defining a Correctness Oracle}
 
-A central challenge in testing layout invalidation is that there is no
-obvious external ground truth for the correct layout of a test case.
-Cross-browser comparisons can expose rendering differences, but those
-differences do not necessarily identify an invalidation bug because browsers
-may make different implementation, feature-support, or rendering choices.
-Crash-based or assertion-based fuzzing is also insufficient because an
-under-invalidation bug can produce a visually incorrect layout while the
-browser continues running normally.  The difficult part is therefore not only
-generating a page that changes layout, but also deciding whether the browser
-reused stale layout information after that change.
+The central challenge for layout correctness is
+  in constructing an oracle that detects layout bugs.
 
-\textbf{No external ground truth}: A generated HTML and CSS test case does
-not come with a known correct layout.  Comparing against another browser can
-identify that two implementations disagree, but it cannot determine which
-browser is wrong or whether the difference is caused by invalidation.
-\toolname therefore needs an oracle that does not depend on a separate
-browser or reference implementation.
+\paragraph{No obvious failures}
+The web platform guarantees that web page layout
+  is always a successful, atomic operation.
+There are neither failures nor intermediate states to observe.
+Crash-based and assertion-based fuzzers are thus
+  insufficient to detect under-invalidation.
 
+\paragraph{No ground truth}
+There is also no external ground truth to determine correct layout.
+Different browsers use different default fonts,
+  different text layout libraries,
+  and different user interface components.
+They also support different sets of web platform features,
+  and use different implementation internals;
+  for example, Firefox performs layout in sixtieths of a pixel
+  while Chrome uses sixty-fourths of a pixel~\cite{cassius}.
+Plus, some aspects of layout, like table layout,
+  are not fully specified.
+When two browsers disagree,
+  this does not guarantee that either one is wrong.
+The Janus fuzzer also faced this issue~\cite{janus},
+  and compensated by using a weaker oracle:
+  two different browsers should either both change
+  or both not change their rendering in response to a user action.
+However, mistakes in invalidation often result in \emph{partial} updates,
+  making this weaker oracle insufficient to catch under-invalidation bugs.
 
-\textbf{Non-crashing failures}: Under-invalidation bugs often do not crash
-the browser or violate an explicit assertion.  Instead, the browser may
-continue executing while displaying stale geometry.  This makes conventional
-crash-based fuzzing insufficient, because the fuzzer needs to detect a
-semantic layout mismatch rather than a process failure.
+\paragraph{Rapid change}
+Browser rendering engines also rapidly implement new features,
+  making regression testing challenging.
+The R2Z2 fuzzer also faced this issue~\cite{r2z2},
+  and used the Web Platform Tests cross-browser test suite
+  to differentiate between new features and new bugs.
+However, this is insufficient to detect new features
+  that are implemented incorrectly,
+  which is where detecting under-invalidation bugs
+  is most valuable, an issue noted by the R2Z2 authors.
 
-\textbf{Path-dependent correctness}: Under-invalidation depends on an
-execution path, not just a final page state.  The same HTML and CSS may be
-correct when the browser computes layout from scratch, but incorrect when the
-browser reaches that state through an incremental update.  A useful oracle
-must therefore compare two ways of reaching the same final page state:
-one through the incremental layout version and one through a refreshed layout
-computation.
-
-\textbf{Solution 1}: \toolname addresses this challenge using a
-self-differential testing oracle.  For each test case, \toolname compares the browser's
-incremental layout version after a style update against a refreshed layout
-version to identify a bug. 
+\paragraph{Self-differential testing}
+\toolname addresses this challenge using self-differential testing oracle.
+The same HTML and CSS may be laid out correctly
+  when the browser computes layout from scratch,
+  but incorrectly when the browser reaches that state through an incremental update. 
+But the web platform standards do not allow for path dependence;
+  the layout of a web page should depend only on the page itself
+  and browser parameters like viewport size.
+\toolname thus compares the browser's layout of a page
+  after incremental layout to the layout after from-scratch layout.
+Any difference indicates an under-invalidation bug.
+This approach compares browser rendering engine against itself,
+  avoiding all sources of cross-browser and cross-version differences.
 
 \subsection{Challenge 2: Triggering Under-Invalidation Behavior}
 
-Valid HTML and CSS are not necessarily useful for testing layout
-invalidation.  Under-invalidation occurs only when a page first establishes a
-layout state, then receives a meaningful style update, and the browser
-fails to recompute geometry affected by that update.  An unconstrained fuzzer
-can produce many accepted pages without exercising these incremental-layout
-paths. \toolname therefore
-biases generation toward CSS properties and mutations that are likely to
-change layout, so that each test is more likely to trigger the browser's
-invalidation logic.
+A fuzzer must not only detect when a bug has been triggered
+  but also generate inputs that trigger them.
+Unfortunately, doing so for under-invalidation bugs is difficult,
+  because these bugs often rely on complex situations to trigger.
 
-\textbf{Display}: The \texttt{display} property is a useful target
-because it determines the layout mode used for an element and
-changes how its children participate in layout. Changing \texttt{display}
-can move an element between block, inline, flex, grid, table, or hidden
-states, each of which requires different layout behavior. These
-changes can affect both the modified element and its descendants, they
-provide strong opportunities to expose missed invalidation decisions in
-incremental layout engines~\cite{panchekha2024reusing,kilpatrick2021layoutng}.
+\paragraph{Representing Changes}
+Invalidation algorithms consider both
+  the web application state---the DOM,
+  consisting of HTML elements and their CSS properties---%
+  and also the changes made to that state
+  since the last layout.
+Fuzzing for under-invalidation bugs thus requires
+  generating both.
+\toolname thus generates
+  a tree of HTML elements and, for each element,
+  both a set of initial CSS properties
+  and a set of changes to those CSS properties.
+Rendering the initial HTML and CSS
+  and then performing the indicated changes
+  can then trigger an under-invalidation bug.
 
-\textbf{Grid}: Grid layout creates many invalidation opportunities
-because it introduces relationships between a container and
-its children. Changing grid templates, gaps, placement rules, or
-auto-flow can reposition multiple children from a single style update.
-This makes grid a strong target for \toolname because a missed
-invalidation can leave incorrect child positions or incorrect container
-geometry. Such dependent geometry is precisely the kind of cached result
-that incremental-layout implementations must invalidate correctly~\cite{panchekha2024reusing,liu2023medea}.
+\paragraph{Element relations}
+Under-invalidation bugs also depend on
+  the relative position of elements in an application;
+  a bug might involve an element have a certain CSS property
+  and whose child has a certain other CSS property assigned.
+Children, grand-children, parents, siblings,
+  and even more distant relationships affect layout
+  and can thus be relevant to invalidation decisions.
+\toolname thus generates large element trees
+  where a multitude of elements with various relations are available.
 
-\textbf{Flow-root}: The \texttt{display:flow-root} value is important
-because it establishes a new block formatting context and changes the
-boundary at which surrounding layout is resolved. Mutating it can therefore
-change both the target box and the geometry of neighboring content, making
-it useful for exercising invalidation propagation~\cite{panchekha2024reusing}.
+\paragraph{Grammar Coverage}
+Under-invalidation bugs are most valuable to find
+  during development, when algorithms are easiest to chance.
+Yet development typically focuses on new and then-little-used features.
+In the case of layout under-invalidation,
+  this means support for the span of CSS properties is essential.
+For this reason, \toolname is grammar-directed
+  using Google Chrome's actual CSS properties grammar.
+The grammar-directed generation is used for
+  both the initial CSS properties and for
+  generating new CSS properties that are then
+  assigned to change the application state.
 
-\textbf{Width and height}: Width and height changes directly affect an
-element's box geometry. When an element changes size, the browser may
-need to recompute that element, its descendants, siblings, and sometimes
-ancestors. These mutations are useful because layout engines often
-appears as an obvious mismatch in element size or position.
+\paragraph{Low Success Rate}
+Under-invalidation bugs are rare due to
+  the high effort developers already go through to prevent them.
+This means most bug candidate do not trigger a bug,
+  and makes fuzzing slow.
+Moreover, some under-invalidation bugs are known issues
+  that are difficult to fix due to the structure of surrounding code;
+  these bugs are less valuable to find
+  than yet-unknown ``long-tail'' bugs,
+  which are even rarer.
+To address this low success rate,
+  \toolname generates large web application states,
+  with dozens of elements each with
+  hundreds of initial CSS properties
+  and hundreds of property changes.
 
-\textbf{Percentage and pixel sizes}: Percentage sizes test
-parent-dependent layout behavior because the final size of an element
-depends on its containing block. Pixel sizes create more direct change
-to the geometry possibly causing conflict issues with surrounding 
-elements. Using both lets \toolname exercise
-dependent layout constraints to produce failures that are
-easy to observe and reproduce. General browser fuzzers need not preserve
-such a parent-dependent update relationship, because their target oracles
-are typically crashes, security violations, or externally observed output
-differences~\cite{han2019codealchemist,park2020die,kim2022fuzzorigin,song2022r2z2}.
-
-\textbf{Transforms}: Transform changes affect visual position and
-reported geometry. They provide a controlled update whose effect can be
-checked through the geometry oracle while interacting with containing blocks
-and descendant coordinates. This makes them useful for distinguishing a
-stale incremental result from a freshly computed final layout.
-
-\textbf{Noise reduction}: \toolname disables properties such as
-\texttt{writing-mode}, \texttt{content-visibility}, padding, and table
-display values because they are less likely to produce
-under-invalidation bugs. Instead, these properties
-often add unnecessary complexity to the test cases. Removing them 
-keeps the test cases focused on mutations
-that are more likely to expose missed invalidation decisions and helps
-produce smaller, clearer bug reports. This focus is important because
-unconstrained random inputs can make an observed rendering difference hard
-to attribute to one invalidation decision~\cite{song2022r2z2,song2023metamong,zhou2025janus}.
-
-\textbf{Solution 2}: \toolname includes a generation strategy for
-steering test cases toward style updates that are likely to trigger
-layout under-invalidation bugs. The system focuses on CSS properties and
-mutations that should force layout recomputation, increasing the chance
-that a missed invalidation decision becomes observable.
+\paragraph{Bug Complexity}
+While large application states are effective at
+  raising the success rate for bug generation,
+  the resulting application states are too complex
+  for developers to effectively address the bugs found.
+\toolname thus uses minimization to shrink successful bug candidates,
+  removing elements, properties, and property changes,
+  while preserving the candidate's bug-triggering behavior.
 
 \subsection{Challenge 3: Reducing Report Complexity}
 
-Test cases can contain many unrelated elements, declarations, and
-mutations.  Likely only a small portion of the page causes a bug thus the
-original report may obscure the relevant DOM structure and CSS transition.
-The output can also contain many reports that are syntactically different but
-match a previously observed pattern.  Without reduction and grouping,
-developers must repeatedly inspect large, redundant reports.  At the same
-time fuzzers commonly generate many HTML and CSS variations that
-exercise the same underlying defect, so treating every report as a new bug
-would overstate the diversity of the findings.  However, merging reports too
-aggressively could hide genuinely different bugs.
+Some under-invalidation bugs can be traced to
+  a simple logic error that developers can easily fix.
+Others can be useful for shaping the direction of work in progress,
+  by identifying unworkable designs and driving the design process.
+Others, however, are the consequence of developers previously
+  selecting an unworkable design and now being unable to easily change it.
+Browser rendering engines are decades-old million-line code-bases,
+  and all three types exist in abundance,
+  but a fuzzer cannot easily distinguish between them.
 
-\textbf{Preserving the bug trigger}: Minimization is difficult because
-under-invalidation bugs depend on a precise sequence of layout states.
-The browser first lays out the original page, then applies a style update,
-and then decides which cached layout information can be reused.
-If the minimizer removes an element, style, or mutation that seems
-unrelated but changes this invalidation path, the bug may disappear even
-though the original conditions were present.
+\paragraph{Steering}
+Layout is complex and developers often work
+  on one component at a time.
+Finding under-invalidation bugs in that specific component
+  is then especially valuable, since they can be immediately fixed.
+This requires allowing the developer to influence the search space,
+  such as by indicating CSS properties or CSS property values
+  that the fuzzer should preferentially generate.
 
-\textbf{Separating base style state and modified style state}: To identify which declarations
-are essential to the transition, \toolname moves one modified style
-declaration at a time into the base style state. If the mismatch persists after
-the move, that declaration was not required as an incremental update and can
-be removed from the modified state. If the mismatch disappears, the
-declaration remains modified because changing it after the initial layout is
-part of the bug trigger.
-
-
-\textbf{Avoiding redundancy}: In addition full minimization requires many browser
-executions.  Before minimizing a new report, \toolname can compare it with
-existing structural group rules.  If it matches a group, then the system can assume that there is a common pattern and can retain
-the shared rule and minimized representative rather than fully minimizing an
-additional variation.  Unmatched reports are minimized and can establish new
-groups.
-
-\textbf{Identifying repeated patterns}: To determine
-whether reports represent recurring behavior or potentially new bugs,
-\toolname records the DOM structure, base style state, modified style state, and
-affected element relationships.  It uses this representation to group reports
-that match an existing structural rule, while preserving unmatched reports as
-separate candidates.  The resulting groups are evidence of recurring
-patterns, not proof of a shared root cause; similarly, unmatched reports are
-candidates for separate validation rather than confirmed bugs.
-
-\textbf{Solution 3}: \toolname minimizes reports while preserving the
-state transition that exposes the bug, then groups structurally equivalent
-reports around a shared representative.  This reduces the HTML and CSS a
-developer must inspect, avoids spending full minimization cost on reports
-already represented by a group, and separates repeated variants from
-potentially distinct candidates.  The resulting reports are then suitable for
-browser-developer review, which provides the final evidence that a candidate is
-real and novel.
+\paragraph{Summarization}
+Many fuzzer-generated bug candidates trigger the same underlying bug;
+  tediously examining them all by hand, or even with AI assistance,
+  is likely to be time-consuming.
+Since similar bug candidates---especially after minimization---%
+  likely trigger the same bug,
+  clustering bugs by similarity reduces the review burden.
+Since under-invalidation bugs often depend
+  on structural relationships in the element tree,
+  the clustering technique should account for these relationships,
+  along with the CSS properties or property values
+  that are present within the cluster.
