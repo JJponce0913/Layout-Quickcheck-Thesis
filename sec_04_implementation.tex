@@ -1,200 +1,289 @@
 \section{Implementation}
 
-\toolname is implemented in Python as an end-to-end, feedback-free fuzzing
-pipeline for browser layout invalidation.  The implementation executes the serialized page in a real
-browser through Selenium WebDriver, and identifies an \UnderInvalidation
-failure when the incremental layout version and refreshed layout version disagree.  The same
-pipeline then generates candidate reports, minimizes them, and groups
-structurally related reports.  The following sections describe the
-implementation: the layout oracle, the
-generation of web pages and bug candidates, and the clustering of reports.
-
-Fig.~\ref{fig:implementation-pipeline} summarizes the main stages of the
-\toolname implementation pipeline.
+\toolname is an end-to-end, feedback-free fuzzing pipeline
+  for browser under-invalidation bugs.
+It detects under-invalidation using self-differential testing
+  between invalidation and from-scratch layout;
+  generates bug candidates using grammar-based generation
+  of large element trees with many initial and changed properties;
+  and minimizes and clusters bugs using
+  both structural element relations and similar CSS properties.
+\toolname uses Selenium WebDriver to drive a browser,
+  and supports all three browser rendering engines:
+  Chrome's Blink, Firefox's Gecko, and Safari's Webkit.
+\Cref{fig:implementation-pipeline} summarizes
+  the main stages of \toolname pipeline.
 
 \input{fig_implementation_pipeline}
 
 \subsection{Layout Oracle}
 
-\toolname checks layout correctness using self-differential testing: it
-tests the browser against itself rather than comparing one browser against
-another browser or against an external reference implementation. This is the
-core idea of the oracle. For each test case, \toolname asks
-whether the browser produces the same layout for the same final page state
-when that state is reached in two different ways.
+For each bug candidate,
+  \toolname causes the browser, via Selenium,
+  to render the initial application state (serialized as a web page).
+Importantly, the CSS properties for each element
+  are serialized as HTML \texttt{style} attributes.
+This minimizes the amount of work
+  performed by the matching and styling phases
+  of the browser rendering pipeline (\Cref{fig:rendering-pipeline}),
+  reducing the parts of the browser
+  that could be implicated in any bug.
+
+\toolname then uses the Selenium APIs
+  to perform the generated property changes
+  and re-render the application state.
+The output of layout---%
+  the size and position of each element---%
+  is read using the browser's \texttt{getBoundingClientRect} API.
+Note that, unlike prior browser fuzzing tools~\cite{which ones?},
+  \toolname does not use screenshots to compare renderings.
+The \texttt{getBoundingClientRect} API reads
+  the output of layout without requiring them to be visually apparent,
+  for example allowing it to detect when
+  the size of a transparent element differs.
+
+\toolname then causes the browser to perform
+  a from-scratch layout by executing the JavaScript command:
+\begin{verbatim}
+let root = document.documentElement;
+root.innerHTML = root.innerHTML;
+\end{verbatim}
+The \texttt{innerHTML} property used here is not a normal field access;
+  instead, reads and writes to this property perform
+  web application state serialization and deserialization,
+  so this command has the effect of serializing the current
+  (post-modification) state
+  and then deserializing it, replacing the current state.
+This does not change the state (though see below)
+  but it does cause every existing invalidation algorithm
+  to invalidate the entire application state,
+  recomputing the entire layout from scratch.
+\toolname then records the new, from-scratch layout output
+  using the same \texttt{getBoundingClientRect} API.
+Any difference between the first and second layout outputs
+  is then treated as an under-invalidation bug.
+
+In practice, a few extra tweaks were needed to make
+  this bug oracle work.
+Firstly, the \texttt{content-visibility} attribute,
+  which allows the browser to skip layout for off-screen elements.%
+\footnote{It is intended for improving performance in
+  long-scrolling ``infinite scroll'' user interfaces,
+  where it allows the browser to skip layout for
+  off-screen content.}
+This could produce false positives
+  if the property changes affect which elements are onscreen.
+\toolname thus never generates this (relatively rare) CSS property.
+Secondly, many CSS properties have multiple names;
+  for example, \texttt{margin-left} and \texttt{margin-inline-start}
+  are aliases when writing left-to-right.
+In Chrome, this triggered a bug, where serialization
+  did not preserve the relative order of the two properties.
+Serialization and deserialization could thus change their order
+  and thereby change the layout, without triggering under-invalidation.
+\toolname thus avoids \texttt{margin-inline-start} and similar logical names.
 
 To validate that this oracle captures real under-invalidation failures,
-we converted 11 historical browser bug reports into equivalent \toolname
-test cases. Table~\ref{tab:reproducible-bug-components} decomposes each
-case into the three components \toolname generates: an HTML tree, initial
-styles, and a style mutation.
+  we converted 11 historical under-invalidation bug report
+  from Chrome and Firefox
+  into equivalent \toolname test cases, shown in \Cref{tab:reproducible-bug-components}.
+We tested each historical bug report using the \toolname oracle
+  and found that it detected all 11 bugs, showing that the oracle is effective.
 
 \input{figures/tab_reproducible_bug_components}
 
-This differs from most existing browser fuzzers because \toolname does not
-treat crashes, security violations, API exceptions, or cross-browser
-differences as its main correctness signal. Crash-oriented fuzzers can find
-memory-safety and stability bugs, but an under-invalidation bug may leave
-the browser running normally while still displaying a stale layout.
-Cross-browser rendering fuzzers can find cases where two browsers disagree,
-but disagreement alone does not show which browser is wrong or whether the
-problem is caused by incremental layout invalidation. In contrast,
-\toolname compares two layout computations inside the same browser for the
-same final page state, making the oracle specifically targeted at stale
-incremental layout version results.
-
-The first execution path is the incremental layout version. \toolname
-loads a test case, applies a style update, and records
-the resulting layout. This is the point where the layout engine decides which 
-cached layout state must be invalidated after the page changes. 
-The second execution path is a refreshed layout version. After the
-style update has been applied, \toolname forces the same browser to rebuild
-the page from scratch and compute the layout again from the same final HTML 
-and CSS state creating the correct build of this web page configuration. 
-
-These two executions should produce identical results. If the incremental
-layout version differs from the refreshed layout version, then the browser has produced two
-different layouts for the same final page state. Because both results come
-from the same browser, the mismatch is not caused by differences between
-browser engines, feature support, or rendering policies. Instead, it is
-evidence that the incremental layout version reused stale layout information and
-failed to invalidate part of the page correctly.
-
-In practice, the oracle records the position and size of each element after
-the incremental update and then records the same information again after the
-refreshed layout version. It compares the position,
-width, and height for matching elements. If all recorded values match, the
-test passes. If any element has a different layout between the two paths,
-\toolname reports the test as a layout-bug candidate.
-
-This oracle is important because it gives \toolname a correctness signal for
-bugs that do not cause crashes and do not require another browser to serve
-as a reference. By comparing the browser's incremental layout version against its
-own refreshed layout version, \toolname directly targets the under-invalidation
-errors that conventional fuzzers are not designed to detect.
-
 \subsection{Test Case and Bug Generation}
 
-\toolname generates test cases that are designed to exercise layout
-invalidation behavior rather than arbitrary browser behavior. Each test case
-contains an initial page state and a style update.
-
-Internally, each test case is represented as a \texttt{RunSubject}:
+Internally, each \toolname bug candidate is represented as a \texttt{RunSubject}:
 
 \begin{itemize}
     \item an \texttt{ElementTree}, which is a nested representation of the
     generated DOM;
-    \item a base \texttt{StyleMap}, containing declarations applied in the
-    initial document; and
-    \item a modified \texttt{StyleMap}, containing declarations installed
-    later by JavaScript.
+    \item a base \texttt{StyleMap}, containing declarations applied
+      to each element in the initial document; and
+    \item a modified \texttt{StyleMap}, containing declarations applied
+      later by JavaScript as a modification to the page.
 \end{itemize}
 
-The \texttt{ElementTree} defines the page structure, while the two
-\texttt{StyleMap}s define the base style state and the modified style state. The base style
-state determines the layout that the browser computes when the page first
-loads. The modified style state is applied later through JavaScript, forcing
-the browser to use its incremental layout invalidation engine. This test case
-produces the incremental layout version, which is then later compared to a
-refreshed layout version of the same final page state.
+Each component has a simple grammar-directed generator.
+The \texttt{ElementTree} is built from
+  nested elements and text nodes,
+  with each element generating a random number of children
+  and each text nodes generating a random number of words.
+The generator probabilities are chosen
+  to make the typical \texttt{ElementTree} dozens of elements.
+Generating text is important because the interaction of text and non-text content
+  is a critical component of layout and a source of under-invalidation bugs.
+By contrast, different HTML element names are mostly unimportant,
+  because an element's role in layout is driven by
+  its CSS properties, not its tag name,
+  so \toolname sticks to generic \texttt{<div>} elements..%
+\footnote{The tag name plays a role in the earlier matching phase.}
 
-The generator builds pages from nested elements and text. Nested elements are
-important because many layout bugs are triggered when their are changes 
-between parents, children, siblings, or descendants. Text is
-also useful because it introduces content-dependent sizing and positioning.
-Together, these structures create pages where a single style change can
-propagate through multiple parts of the layout tree, increasing the chance
-that a missed invalidation decision becomes observable.
+The two \texttt{StyleMap}s are generated by selecting,
+  for each CSS property, either to not generate a value for it
+  or to generate a value based on that value's grammar
+  as defined in Chrome's \texttt{css-properties.json5} parser generator.
+For keyword properties like \texttt{display},
+  \toolname selects each valid keyword with some probability;
+  for numeric properties like \texttt{width},
+  it selects a random value between -1000 and 1000
+  and adds a randomly-selected unit.%
+\footnote{Including both absolute units like \texttt{px}
+  and relative units like \texttt{\%}.}
+One exception to the above rule is that \toolname
+  always generates, for each element,
+  a value for the \texttt{display} property.
+This property sets the ``layout mode'' of the element,
+  which affects the entire layout computation.
+Selecting a diversity of layout modes across the page
+  increases the amount of cross-layout-mode interactions,
+  which is a common source of under-invalidation bugs.
 
-To further increase the likelihood of triggering under-invalidation behavior,
-\toolname biases generation toward CSS properties that are likely to affect
-layout geometry. Properties such as \texttt{display}, grid-related
-properties, \texttt{width}, \texttt{height}, percentage sizes, pixel sizes,
-and transforms are useful because they can change element size, position,
-layout mode, or parent-child layout relationships. These properties are more
-likely to require recomputation than purely visual properties, so they give
-the oracle more meaningful state changes to check.
+A browser developer can affect the probability of including a property,
+  and the probability of generating any particular grammatical construction,
+  by setting probabilities in a configuration file.
+The Chrome developers made use of this capability
+  when working on a redesign of the grid layout mode
+  by biasing \toolname toward generating complex grid layouts,
+  and the Firefox developers did the same for
+  the \texttt{flow-root} value of the \texttt{display} property
+  when testing a reflow root invalidation change.
+Conversely, both browsers' developers chose to
+  reduce the probability of \texttt{writing-mode} property,
+  which chooses between horizontal and vertical writing,
+  when vertical writing support was immature in both browsers,
+  to reduce the rate at which known but low-priority bugs
+  were discovered.
 
-The generator also supports weighted property selection. These weights allow
-an experiment to increase the probability of selecting properties that are
-expected to stress layout invalidation, while reducing or disabling
-properties that mostly add noise. This
-changes the distribution of test cases so that more executions target
-the kinds of mutations that are likely to expose stale layout results.
-
-This design addresses the second challenge by making generation
-invalidation-aware. Rather than producing only valid HTML and CSS,
-\toolname produces pages with layout-affecting style updates. As a result,
-each test case is more likely to exercise the browser's incremental layout logic
-and more likely to produce a bug candidate when that logic fails to
-invalidate stale geometry.
+The generation step generates large bug candidates:
+  dozens of elements with hundreds of properties each.
+The size is tuned so that bugs are found frequently,
+  increasing the effectiveness of fuzzing;
+  in effect, large bug candidates exercise multiple code paths
+  and thus probe for many under-invalidation bugs at once.
+However, making bug candidates even bigger would be unwise:
+  if a bug candidate contains two independent bugs,
+  which one survives minimization would depend on
+  the minimization algorithm,
+  which could bias \toolname away from certain
+  (likely, more complex) bugs.
+\toolname is tuned to detect a bug roughly once or twice a minute,
+  which takes a few hundred bug candidates.
+As browser developers fix under-invalidation bugs
+  and the rate of multiple bugs falls,
+  \toolname could be tuned to generate larger bug candidates
+  and thus preserve its effectiveness.
 
 \subsection{Minimization and Structural Clustering}
 
-Candidate pages are usually much larger than the condition required to
-reproduce a mismatch.  \toolname applies delta debugging to reduce a
-bug-triggering test case while preserving the oracle result.  For each
-proposed simplification, it deep-copies the current subject, executes the
-candidate in the target browser, and retains the copy only if the result
-remains a bug.  Every accepted reduction becomes the new subject, so later
-reductions are tested against the smallest subject found so far.  The
-delta-debugging process uses the following proposal families in order:
+\toolname's strategy of generating large bug candidates
+  raises bug finding efficiency
+  but makes the resulting bugs almost impossible
+  for human developers to directly understand.
+It thus performs a minimization pass
+  to simplify the bugs while preserving
+  the detected under-invalidation bug (under the oracle).
+It does so by repeatedly performing simplifying transformations:
+  removing elements;
+  removing properties, either all at once or one at a time;
+  and converting modified to base properties.
+Converting modified to base properties
+  often results in a bug where only a single property is modified,
+  which then helps enormously with debugging.
+Minimization also applies some readability-oriented transformations,
+  like setting minimum sizes and adding background colors;
+  like with all other minimization steps,
+  the oracle is re-tested after every transformation.
 
-\begin{enumerate}
-    \item remove each element, including its associated base and modified
-    style entries;
-    \item remove every style map for one element at a time;
-    \item remove individual base style state or modified style state declarations;
-    \item move one modified declaration into the base map, thereby testing
-    whether that declaration must be an incremental change rather than merely
-    being present in the final state;
-    \item apply readability-oriented transformations, including minimum box
-    sizes, background colors, short identifiers, and an optional in-page
-    control overlay.
-\end{enumerate}
+As is common in fuzzing, many generated bugs
+  exercise the same underlying root cause.
+In fact, many bugs are strikingly similar after minimization.
+To further reduce review burden,
+  \toolname thus attempts to cluster similar bugs.
+Each cluster is defined by a template;
+  when a bug is found,
+  it is matched against the templates of every existing cluster,
+  and if one matches the bug is placed in that cluster
+  without minimization.
+Developers can review the template
+  instead of the individual bugs in the cluster.
+(Of course, they can also review individual bugs.)
+This allows them to rapidly skip known bugs
+  and focus on the ones that are immediately fixable.
 
-The fourth step in minimization, implemented by
-\texttt{Minify\_MoveStyleChangesToFirstLoad}, is particularly important for
-this bug class.  If moving a declaration to the initial state preserves the
-mismatch, it is not necessary for the incremental transition and can be
-removed from the set of modified properties.  Conversely, declarations that
-cannot be moved identify the state change that is more likely to matter to
-invalidation.
+However, critically,
+  the templates are discovered dynamically from the generated bugs
+  instead of being defined by hand.
+Every time a new bug is found
+  that does not belong to an existing cluster,
+  \toolname attempts to generalize every existing template
+  to match the new bug.
+The generalized template is then checked against
+  all \emph{non-bug} bug candidates it has already generated;%
+\footnote{This is only done once at least 100 non-bug bug candidates exist,
+  to ensure that this check is non-vacuous.}
+  if the new template does not match any non-bugs,
+  the generalized template is kept,
+  and the new bug is grouped with that cluster.
+On the other hand, if all generalized templates match non-bugs,
+  the newly-generated bug assigned to a new cluster
+  whose template exactly matches the new bug
+  (and thus only matches it).
+In this way, the clusters always cover all bugs and no non-bugs,
+  but one cluster may contain several related bugs,
+  making clusters meaningful.
+In practice, most clusters achieve their final, most-general template
+  after just two or three bugs,
+  and generated templates are small and easy to review.
+  
+The technical representation of templates is critical for this to process.
+To form a template, two bugs' element trees
+  are aligned at the first (and usually only) element with a modified property.
+These are always \texttt{<div>} elements,
+  since text nodes cannot be assigned CSS properties.
+Then, the template includes those elements'
+  parents, children, and siblings
+  (and, recursively, their parents, children, and siblings)
+  only to the extent that they exist and are the same type.
+So, for example, if the aligned elements in two bugs
+  both have a text child followed by a \texttt{<div>} child,
+  then the template will contain all three tree nodes,
+  but if one element has a text child
+  and the other has a \text{<div>} child,
+  the template will not include either child, since their types differ.
+Then, for every remaining element,
+  their base and modified CSS properties are kept
+  only if both bugs assign a value to that property,
+  and the value is kept only if both bugs assign the same one.%
+\footnote{For length properties, if both bugs assign the same kind of unit.}
 
-As previously explained a test case is saved as a run subject which represents the dom tree 
-and the attached base\\modified style this structure 
-is used by the clustering algorithm. The first node with modified style state 
-is used as the start node because it anchors the tree comparison relative to 
-this modified node.  When merging the merged tree represents the DOM structure relative to this 
-anchor: it compares the modified node and its ancestor/descendant structure, 
-rather than depending on that node's absolute location in the full page tree.  
-This emphasizes a smaller local update pattern to compare with across different test cases.
+In effect, in other words, templates are computed
+  by ``intersecting'' two different bugs' element trees.
+They are likewise generalized
+  by intersecting a new bug with the existing template.
+In our experience, this tree intersection algorithm,
+  while somewhat unusual, is effective at finding
+  short templates that apply to many bugs
+  and do not apply to non-bug bug candidates,
+  making them effective.
+In either case, note that the larger template generalization algorithm
+  guarantees that clusters are meaningful;
+  the tree intersection algorithm influences
+  the number and size of clusters but not
+  the correctness of the clustering algorithm itself.
 
-A group stores a merged representative tree and an extracted JSON rule.  To
-form a candidate rule, the implementation merges two trees.
-Equal nodes and values are retained.  Discrepencies in values are
-represented by the wildcard value \texttt{diff}, meanwhile discrepencies in structure are delelting.  The resulting merged tree then has a rule extracted from it which 
-consists of an ordered HTML pattern with the attached base style state and modified style state.  
-Matching checks both components: the
-incoming subject must contain the ordered structural pattern and at least one
-matching element must have the required base style state and modified style state declarations.
-
-Before accepting either a match or a new group, the rule is validated against
-the safe repository. The safe repository is a small repository
-of known-safe subjects. It generates and executes subjects until the 
-configured safe directory contains a set of bug free \texttt{RunSubject} objects. 
-A rule is rejected if it matches any safe samples.  This is a guard against a broad
-structural description that would classify ordinary pages as bug instances.
-
-If an incoming bug matches an existing rule, the runner skips the full
-reduction and saves it as another instance under that group.  Otherwise, it
-minimizes the bug first.  The final minimized subject is then compared
-against standalone reports.  Matching a standalone report promotes
-the two reports into a newly created \texttt{bug-group-*} directory and
-writes the extracted rule. Group artifacts are
-recomputed so the merged representative and rule correspond to the instances
-currently stored in that directory.  The sorting time is measured separately
-and added to the run summary alongside minimization time; this makes the
-cost and benefit of grouping measurable in Section~V. Each saved report is 
-placed in either a standalone \texttt{bug-*} directory
-or a child directory of a \texttt{bug-group-*} directory.  
+The developer workflow for \toolname is then as follows.
+The developer first, optionally, writes a configuration file
+  describing the properties and property values
+  that they want \toolname to focus on
+  (this raises the probability of generating such).
+They then launch \toolname and run it
+  for any length of time they please;
+  as it runs, \toolname records all bug candidates it generates,
+  along with their status:
+  non-bug bug candidates, used for testing generalized templates;
+  and bugs, stored by cluster along with the cluster's template.
+The developer then reviews each cluster,
+  likely by examining the cluster's template,
+  and identifies the generated bugs they are able to fix.
