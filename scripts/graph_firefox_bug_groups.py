@@ -42,13 +42,13 @@ def get_group_sizes(results_directory: Path) -> list[tuple[str, int]]:
         and not item.name.startswith("bug-group-")
         for item in results_directory.iterdir()
     )
-    if single_bug_count:
-        groups.append(("Single bugs", single_bug_count))
-
-    if not groups:
+    if not groups and not single_bug_count:
         raise ValueError(f"No bug-group-* or bug-* directories found in: {results_directory}")
 
-    return sorted(groups, key=lambda item: (-item[1], item[0]))
+    groups.sort(key=lambda item: (-item[1], item[0]))
+    if single_bug_count:
+        groups.append(("Single bugs", single_bug_count))
+    return groups
 
 
 def main() -> None:
@@ -65,8 +65,9 @@ def main() -> None:
     figure_width = max(12, len(groups) * 0.32)
     figure, axis = plt.subplots(figsize=(figure_width, 7), dpi=140)
     positions = range(len(groups))
-    axis.bar(positions, counts, color="#2563eb")
-    axis.set_xticks(list(positions), labels=names, rotation=60, ha="right")
+    colors = ["#f97316" if name == "Single bugs" else "#2563eb" for name in names]
+    axis.bar(positions, counts, color=colors)
+    axis.set_xticks([])
     axis.set_ylabel("Bug instances")
     axis.set_title(f"Firefox bug groups by instance count ({len(groups)} groups)")
     axis.grid(axis="y", alpha=0.3)

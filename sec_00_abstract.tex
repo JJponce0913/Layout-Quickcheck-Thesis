@@ -26,11 +26,9 @@
     finding dozens of bug candidates in each browsers
     (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox).
   Furthermore, \toolname's bug minimization and clustering passes
-    reduce the number of style elements
-    by \StyleElementOriginalToMinimizedReduction\ 
-    and \StyleElementMinimizedToClusteredReduction\ 
-    relative to minimized reports, all while requiring only
-    \RuntimePercentMinClust\ percent of the runtime.
+    reduce the style-element volume by approximately 2.7x
+    through minimization and 385x overall after clustering,
+    all while requiring only \RuntimePercentMinClust\ of the runtime.
   Finally, we show that \toolname finds
     \NumBugsNovel novel bugs, across both browsers,
     that were reported to and accepted by the developers,

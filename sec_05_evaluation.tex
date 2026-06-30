@@ -9,12 +9,12 @@ Our evaluation of \toolname answers three research questions:
 \item[RQ3] Does \toolname find novel under-invalidation bugs?
 \end{enumerate}
 
-We test \toolname on Google Chrome~\todo{XXX.XX}
-  and Mozilla Firefox~\todo{XXX.XX}
-  using Selenium~\todo{XX.XX} via
-  chromedriver~\todo{XX.XX}
- and geckodriver~\todo{XX.XX}.
-\toolname itself runs on Python~\todo{X.XX}.
+We test \toolname on Google Chrome (149.0.7827.115)
+  and Mozilla Firefox (152.0)
+  using Selenium (4.40.0) via
+  chromedriver (149.0.7827.115)
+ and geckodriver (0.37.0).
+\toolname itself runs on Python (3.13.11).
 
 Because no existing fuzzer specifically targets under-invalidation bugs,
  our evaluation focuses on \toolname’s efficiency
@@ -142,19 +142,16 @@ Both are measured on a nine-hour fuzzing run of Mozilla Firefox,
   after minimization but not clustering;
   and then after clustering, considering the template for each cluster.
 Size is measured by the total number of CSS properties
-  in the \todo{base} styles of the resulting bugs,
+  in the base styles of the resulting bugs,
   though similar results would be seen for counting
   elements or modified styles.
-Minimization reduces the total number of CSS
-  in generated bugs by \StyleElementOriginalToMinimizedReduction,
-  relative to the original reports.
-Combining minimization with clustering
-  reduces the style-element volume further,
-  by \StyleElementMinimizedToClusteredReduction\ relative to minimized reports.
-Clustering with minimization thus results in
-  a \StyleElementOriginalToClusteredReduction\ reduction,
-  a dramatic reduction that substantially lowers the review burden
-  for developers using \toolname.
+Minimization reduces the style-element volume in generated bugs
+  by approximately 2.7x relative to the original reports.
+Combining minimization with clustering reduces the volume by a further
+  147x relative to minimized reports.
+Together, minimization and clustering produce an approximately
+  385x reduction in style-element volume,
+  substantially lowering the review burden for developers using \toolname.
 
 \begin{figure}[!t]
     \centering
@@ -221,12 +218,12 @@ RQ3 therefore asks whether \toolname finds
 
 \Cref{fig:rq3-bug-group-sizes} shows the final distribution of bug groups
   for the nine-hour Firefox run in RQ2;
-  there are \todo{37} singleton bugs collected into a single bar.
+  there are 37 singleton bugs collected into a single bar.
 As is typical for fuzzers, the largest cluster is quite large,
   with 203 total bugs, roughly a third of all bugs found in this run,
   but the total number of bug clusters is large,
   showing that \toolname finds a diversity of different bugs.
-\Cref{fig:rq3-diversity} shows how the number of bug groups
+\Cref{fig:rq3-firefox-diversity} shows how the number of bug groups
   and singleton bugs changes over time.
 After a rapid increase over the first three hours of the run,
   the number of singleton bugs reaches a rough steady state,
@@ -246,9 +243,9 @@ Simply grouping bugs is not enough to confirm that the bugs are novel.
 \Cref{tab:rq3-reported-bugs} thus lists \NumBugsNovel{} bugs
   reported by the authors to the Google and Mozilla bug trackers,
   along with their bug tracker status as of the time of submission.
-\todo{All} bugs have been accepted by the developers.
+All bugs have been accepted by the developers.
 \NumBugsFixed{} of these bugs have additionally been
-  fixed or closed by developers,
+  fixed by developers,
   showing that the bugs are not only valuable to developers
   but also fixable.
 
@@ -265,20 +262,19 @@ Simply grouping bugs is not enough to confirm that the bugs are novel.
         Chrome & 1137427 & Repeated white-space application failure & \textcolor{green!50!black}{Fixed} \\
         Chrome & 1166887 & Dynamic table-caption vertical order swap & \textcolor{green!50!black}{Fixed} \\
         Chrome & 1189755 & Fixed-position grid layout under-invalidation & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 1189762 & None-to-inline-grid display invalidation & \textcolor{red}{Open} \\
+        Chrome & 1189762 & None-to-inline-grid display invalidation & \textcolor{blue}{Open} \\
         Chrome & 1190220 & Grid layout page crash & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 1219641 & Inline-grid list-item text-indent invalidation & \textcolor{red}{Open} \\
+        Chrome & 1219641 & Inline-grid list-item text-indent invalidation & \textcolor{blue}{Open} \\
         Chrome & 1224721 & Grid layout under-invalidation report & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 1229681 & Grid child display-none invalidation & \textcolor{red}{Open} \\
+        Chrome & 1229681 & Grid child display-none invalidation & \textcolor{blue}{Open} \\
         \midrule
-        Firefox & 1721719 & Table row-group height inconsistency & \textcolor{red}{Open} \\
-        Firefox & 1724982 & Table min-height overflow discrepancy & \textcolor{red}{Open} \\
-        Firefox & 1724991 & Dynamic break-spaces invalidation inconsistency & \textcolor{red}{Open} \\
-        Firefox & 1733276 & Display-inline margin line-wrapping inconsistency & \textcolor{red}{Open} \\
-        Firefox & 1735376 & Grid table-row height inconsistency & \textcolor{green!50!black}{Closed} \\
-        Firefox & 1735931 & Percent-sized grid-item height inconsistency & \textcolor{green!50!black}{Closed} \\
-        Firefox & 1748891 & Sticky padding scrollport position inconsistency & \textcolor{red}{Open} \\
-        Firefox & 1724999 & Layout Quick Check metabug & \textcolor{red}{Open} \\
+        Firefox & 1721719 & Table row-group height inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 1724982 & Table min-height overflow discrepancy & \textcolor{blue}{Open} \\
+        Firefox & 1724991 & Dynamic break-spaces invalidation inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 1733276 & Display-inline margin line-wrapping inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 1735376 & Grid table-row height inconsistency & \textcolor{green!50!black}{Fixed} \\
+        Firefox & 1735931 & Percent-sized grid-item height inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 1748891 & Sticky padding scrollport position inconsistency & \textcolor{green!50!black}{Fixed} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -289,7 +285,7 @@ Simply grouping bugs is not enough to confirm that the bugs are novel.
 \textbf{RQ3:} \toolname finds
   a substantial diversity of under-invalidation bugs,
   including \NumBugsNovel{} confirmed bugs,
-  of which \NumBugsFixed{} have been fixed or closed.
+  of which \NumBugsFixed{} have been fixed.
 \end{minipage}
 }
 \end{center}
