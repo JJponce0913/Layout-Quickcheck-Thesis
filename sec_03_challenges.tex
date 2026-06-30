@@ -41,7 +41,7 @@ However, mistakes in invalidation often result in \emph{partial} updates,
 \paragraph{Rapid change}
 Browser rendering engines also rapidly implement new features,
   making regression testing challenging.
-The R2Z2 fuzzer also faced this issue~\cite{r2z2},
+The R2Z2 fuzzer also faced this issue~\cite{song2022r2z2},
   and used the Web Platform Tests cross-browser test suite
   to differentiate between new features and new bugs.
 However, this is insufficient to detect new features
@@ -62,6 +62,9 @@ But the web platform standards do not allow for path dependence;
 Any difference indicates an under-invalidation bug.
 This approach compares browser rendering engine against itself,
   avoiding all sources of cross-browser and cross-version differences.
+
+\input{fig_oracle_workflow}
+\input{fig_oracle_example}
 
 \subsection{Challenge 2: Triggering Under-Invalidation Behavior}
 

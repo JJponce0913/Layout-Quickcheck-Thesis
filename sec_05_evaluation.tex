@@ -279,6 +279,37 @@ All bugs have been accepted by the developers.
     \end{tabular}
 \end{table}
 
+\subsubsection{Representative Test Cases}
+
+Three reports illustrate the range of failures found by \toolname.
+
+Chromium issue 40188093 was an under-invalidation bug in which element
+  measurements differed after setting a divs display to "grid" and height to "max-content". A Chromium developer
+  traced the failure to a \texttt{column-width} interaction that fell back from
+  the new grid implementation to the legacy grid-layout path, commenting,
+  ``This will basically be fixed once we move multi-col over.'' The report was
+  later closed as ``Fixed by the new grid fragmentation''
+  ~\cite{chromium40188093}.
+
+Firefox bug 1733276 changes a margin-bearing element to
+  \texttt{display:inline}, after which incremental and full layout wrap the
+  same text differently. A Mozilla developer confirmed that 
+  ``the discrepancy is clearly a bug'' and explained the issue is 
+  caused by failing to reflow sufficiently in response to
+  the style change. The minimized test case also contained a mismatched
+  \texttt{</span>} tag whose resulting whitespace was necessary to reproduce
+  the failure.  Triggering a full reflow by zooming
+  makes the layouts agree, but no fix has landed and the report remains open
+  ~\cite{mozilla1733276}.
+
+Chromium issue 40174062 was able to cause a crash in the LayoutNG grid
+  implementation, triggered when a fixed-position element was added as a child
+  of a grid. A Chromium tester confirmed being able to reproduce the issue
+  across macOS, Linux, and Windows. Developers fixed an incorrect assumption
+  that a grid container was always the containing block for its out-of-flow
+  children, added regression tests, and verified that the crash no longer
+  occurred~\cite{chromium40174062}.
+
 \begin{center}
 \fbox{
 \begin{minipage}{0.95\linewidth}

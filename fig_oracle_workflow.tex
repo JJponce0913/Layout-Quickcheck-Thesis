@@ -1,0 +1,99 @@
+\begin{figure*}[t]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      node distance=8mm and 12mm,
+      font=\small,
+      flow/.style={
+        rectangle,
+        rounded corners=2pt,
+        draw=black!65,
+        fill=blue!7,
+        minimum width=28mm,
+        minimum height=11mm,
+        align=center
+      },
+      result/.style={
+        rectangle,
+        rounded corners=2pt,
+        draw=black!65,
+        minimum width=27mm,
+        minimum height=10mm,
+        align=center,
+        font=\small\bfseries
+      },
+      arrow/.style={-{Latex[length=2.2mm]}, thick, draw=black!70},
+      pics/page icon/.style={code={
+        \path[draw=black!75, fill=white, line width=.7pt]
+          (-.34,-.44) -- (.34,-.44) -- (.34,.25) --
+          (.14,.44) -- (-.34,.44) -- cycle;
+        \path[draw=black!75, fill=gray!15, line width=.7pt]
+          (.14,.44) -- (.14,.25) -- (.34,.25);
+        \draw[black!50, line width=.55pt] (-.22,.16) -- (.18,.16);
+        \draw[black!50, line width=.55pt] (-.22,.02) -- (.20,.02);
+        \draw[black!50, line width=.55pt] (-.22,-.12) -- (.15,-.12);
+        \draw[black!50, line width=.55pt] (-.22,-.26) -- (.10,-.26);
+      }},
+      pics/check icon/.style={code={
+        \draw[green!55!black, line width=2.2pt, line cap=round,
+          line join=round] (-.32,.00) -- (-.09,-.23) -- (.38,.28);
+      }}
+    ]
+
+    \node[
+      rectangle,
+      rounded corners=1pt,
+      draw=black!65,
+      fill=gray!8,
+      minimum width=34mm,
+      minimum height=18mm,
+      align=center
+    ] (page) at (0,1.9) {\hspace{8mm}Initial web page};
+
+    \node[flow, minimum width=34mm, minimum height=18mm]
+      (incremental-layout) at (5.7,1.9)
+      {\hspace{8mm}Incremental layout};
+    \node[flow, minimum width=34mm, minimum height=18mm]
+      (scratch-layout) at (5.7,-2.0)
+      {\hspace{8mm}From-scratch layout};
+
+    \node[
+      diamond,
+      aspect=1.7,
+      draw=black!65,
+      fill=yellow!12,
+      align=center
+    ] (equal) at (9.8,-.15) {Layouts\\equal?};
+
+    \node[result, fill=green!14] (no-bug) at (13.2,1.2)
+      {\hspace{7mm}No bug};
+    \node[result, fill=red!14] (bug) at (13.2,-1.5)
+      {\hspace{7mm}Bug};
+
+    \pic[scale=.72] at ([xshift=-11mm]page.center) {page icon};
+    \pic[scale=.72] at ([xshift=-13mm]incremental-layout.center) {page icon};
+    \pic[scale=.72] at ([xshift=-13mm]scratch-layout.center) {page icon};
+    \pic[scale=.72] at ([xshift=-8mm]no-bug.center) {check icon};
+    \node at ([xshift=-8mm]bug.center) {
+      \includegraphics[width=6mm]{figures/bug.png}
+    };
+
+    \draw[arrow] (page) --
+      node[above, font=\scriptsize\bfseries, align=center]
+        {Apply\\Changes}
+      (incremental-layout);
+    \draw[arrow] (incremental-layout) --
+      node[right, font=\scriptsize\bfseries, align=left]
+        {Recompute\\from scratch}
+      (scratch-layout);
+    \draw[arrow] (incremental-layout) -- (equal);
+    \draw[arrow] (scratch-layout) -- (equal);
+    \draw[arrow] (equal) -- node[above, font=\scriptsize] {Yes} (no-bug);
+    \draw[arrow] (equal) -- node[below, font=\scriptsize] {No} (bug);
+  \end{tikzpicture}
+  }
+  \caption{\toolname's self-differential oracle compares incremental layout
+    with layout computed from scratch for the same changed page. A difference
+    indicates an under-invalidation bug.}
+  \label{fig:oracle-workflow}
+\end{figure*}

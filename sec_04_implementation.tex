@@ -35,8 +35,10 @@ This minimizes the amount of work
 The output of layout---%
   the size and position of each element---%
   is read using the browser's \texttt{getBoundingClientRect} API.
-Note that, unlike prior browser fuzzing tools~\cite{which ones?},
-  \toolname does not use screenshots to compare renderings.
+Note that, unlike prior browser testing tools that compare screenshots
+or other visual features~\cite{grewal2025xbi,watanabe2023layout},
+\toolname compares layout measurements directly and does not use
+screenshots to compare renderings.
 The \texttt{getBoundingClientRect} API reads
   the output of layout without requiring them to be visually apparent,
   for example allowing it to detect when
