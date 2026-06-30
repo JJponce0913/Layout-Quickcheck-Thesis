@@ -16,6 +16,10 @@ import matplotlib.pyplot as plt
 
 
 DEFAULT_RESULTS_DIRECTORY = Path(r"D:\bug\postfix\firefox-sort")
+TITLE_FONT_SIZE = 20
+LABEL_FONT_SIZE = 18
+TICK_FONT_SIZE = 10
+ANNOTATION_FONT_SIZE = 10
 DEFAULT_OUTPUT = (
     Path(__file__).resolve().parents[1]
     / "figures"
@@ -68,15 +72,26 @@ def main() -> None:
     colors = ["#f97316" if name == "Single bugs" else "#2563eb" for name in names]
     axis.bar(positions, counts, color=colors)
     axis.set_xticks([])
-    axis.set_ylabel("Bug instances")
-    axis.set_title(f"Firefox bug groups by instance count ({len(groups)} groups)")
+    axis.set_ylabel("Bug instances", fontsize=LABEL_FONT_SIZE)
+    axis.set_title(
+        f"Firefox bug groups by instance count ({len(groups)} groups)",
+        fontsize=TITLE_FONT_SIZE,
+    )
+    axis.tick_params(axis="y", labelsize=TICK_FONT_SIZE)
     axis.grid(axis="y", alpha=0.3)
     axis.set_axisbelow(True)
 
     largest_count = max(counts)
     axis.set_ylim(0, largest_count * 1.12)
     for position, count in zip(positions, counts):
-        axis.text(position, count + largest_count * 0.01, str(count), ha="center", fontweight="bold")
+        axis.text(
+            position,
+            count + largest_count * 0.01,
+            str(count),
+            ha="center",
+            fontweight="bold",
+            fontsize=ANNOTATION_FONT_SIZE,
+        )
 
     figure.tight_layout()
     output.parent.mkdir(parents=True, exist_ok=True)
