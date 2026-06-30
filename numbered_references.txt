@@ -1,0 +1,146 @@
+1. Automated Reasoning for Web Page Layout - Confirmed
+   https://doi.org/10.1145/2983990.2984010
+
+2. Chromium Issue 379886422- Confirmed
+   https://issues.chromium.org/issues/379886422
+
+3. Chromium Issue 40174062- Confirmed
+   https://issues.chromium.org/issues/40174062
+
+4. Chromium Issue 40188093- Confirmed
+   https://issues.chromium.org/issues/40188093
+
+5. Chromium Issue 497183437- Confirmed
+   https://issues.chromium.org/issues/497183437
+
+6. Blink Rendering Engine - Confirmed
+   https://www.chromium.org/blink/
+
+7. ClusterFuzz- Confirmed
+   https://github.com/google/clusterfuzz
+
+8. Domato- Confirmed
+   https://github.com/googleprojectzero/domato
+
+9. Wemby's Web- Confirmed
+   https://doi.org/10.1145/3728937
+
+10. Firefox Performance Best Practices - Confirmed
+    https://firefox-source-docs.mozilla.org/performance/bestpractices.html
+
+11. Fuzzowski- Confirmed
+    https://github.com/nccgroup/fuzzowski
+
+12. Google Project Zero- Confirmed
+    https://projectzero.google/
+
+13. Grammarinator- Confirmed
+    https://github.com/renatahodovan/grammarinator
+
+14. Identifying Cross-Browser Inconsistencies with Vision Language Models
+    No exact public thesis URL located.
+
+15. Grizzly- Confirmed
+    https://github.com/MozillaSecurity/grizzly
+
+16. CodeAlchemist- Confirmed
+    https://doi.org/10.14722/ndss.2019.23263
+
+17. Interop 2026- Confirmed
+    https://web.dev/blog/interop-2026
+
+18. RenderingNG Deep-Dive: LayoutNG- Confirmed
+    https://developer.chrome.com/docs/chromium/layoutng
+
+19. Inside Look at Modern Web Browser, Part 3- Confirmed
+    https://developer.chrome.com/blog/inside-browser-part3
+
+20. Ladybird- Confirmed
+    https://ladybird.org/
+
+21. Conflict-Driven Synthesis for Layout Engines- Confirmed
+    https://doi.org/10.1145/3591246
+
+22. MDN Web Performance- Confirmed
+    https://developer.mozilla.org/en-US/docs/Web/Performance
+
+23. Spineless Traversal for Layout Invalidation- Confirmed
+    https://doi.org/10.1145/3729322
+
+24. MFFA- Confirmed
+    https://github.com/fuzzing/MFFA
+
+25. The State of Workforce Security - Confirmed
+    https://www.paloaltonetworks.com/resources/research/the-state-of-workforce-security-key-insights-for-it-and-security-leaders
+
+26. Mozilla Bug 1452426- Confirmed
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1452426
+
+27. Mozilla Bug 1733276- Confirmed
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1733276
+
+28. Gecko: Reflow Refactoring- Confirmed
+    https://wiki.mozilla.org/Gecko:Reflow_Refactoring
+
+29. Mozilla Bug 539356- Confirmed
+    https://bugzilla.mozilla.org/show_bug.cgi?id=539356
+
+30. Gecko
+    https://firefox-source-docs.mozilla.org/overview/gecko.html
+
+31. Hardening Firefox with Claude Mythos - Confirmed
+    https://hacks.mozilla.org/2026/05/behind-the-scenes-hardening-firefox/
+
+32. Break Google's Search Monopoly - Confirmed
+    https://open-web-advocacy.org/blog/break-googles-search-monopoly-without-breaking-the-web/
+
+33. Pale Moon - Confirmed
+    https://www.palemoon.org/
+
+34. Reusing Previous Computations- Confirmed
+    https://browser.engineering/invalidation.html
+
+35. Fuzzing JavaScript Engines with Aspect-Preserving Mutation- Confirmed
+    https://doi.org/10.1109/SP40000.2020.00067
+
+36. GLeeFuzz- Confirmed
+    https://www.usenix.org/conference/usenixsecurity23/presentation/peng
+
+37. Servo- Confirmed
+    https://servo.org/about/
+
+38. R2Z2- Confirmed
+    https://doi.org/10.1145/3510003.3510044
+
+39. Metamong- Confirmed
+    https://doi.org/10.1145/3611643.3616336
+
+40. StatCounter Browser Market Share- Confirmed
+    https://gs.statcounter.com/browser-market-share
+
+41. W3C Web Standards- Confirmed
+    https://www.w3.org/standards/
+
+42. Layout Cross-Browser Failure Classification- Confirmed
+    https://doi.org/10.1145/3580518
+
+43. WebKit Bug 233421- Confirmed
+    https://bugs.webkit.org/show_bug.cgi?id=233421
+
+44. WebKit Bug 97801- Confirmed
+    https://www2.webkit.org/show_bug.cgi?id=97801
+
+45. WebKit- Confirmed
+    https://webkit.org/
+
+46. WHATWG Standards- Confirmed
+    https://spec.whatwg.org/
+
+47. web-platform-tests Documentation- Confirmed
+    https://web-platform-tests.org/
+
+48. RTFuzz- Confirmed
+    https://doi.org/10.1016/j.cose.2025.104756
+
+49. JANUS- Confirmed
+    https://conf.researchr.org/details/icse-2025/icse-2025-research-track/6/Janus-Detecting-Rendering-Bugs-in-Web-Browsers-via-Visual-Delta-Consistency
