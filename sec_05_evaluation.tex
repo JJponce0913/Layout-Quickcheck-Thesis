@@ -243,22 +243,11 @@ In a long enough run, we expect that \toolname would generate
 \begin{center}
 \fbox{
 \begin{minipage}{0.95\linewidth}
-\textbf{RQ3:} Large variety of bug groups of various sizes establishes
-that \toolname is generating distinct bugs that are triggering unique
-invalidation conditions. 
+\textbf{RQ3:} \toolname generates distinct bugs
+  that are triggering unique invalidation conditions. 
 \end{minipage}
 }
 \end{center}
-
-Simply grouping bugs is not enough to confirm that the bugs are novel.
-\Cref{tab:rq3-reported-bugs} thus lists \NumBugsNovel{} bugs
-  reported by the authors to the Google and Mozilla bug trackers,
-  along with their bug tracker status as of the time of submission.
-All bugs have been accepted by the developers.
-\NumBugsFixed{} of these bugs have additionally been
-  fixed by developers,
-  showing that the bugs are not only valuable to developers
-  but also fixable.
 
 \begin{table}[t]
     \centering
@@ -290,45 +279,67 @@ All bugs have been accepted by the developers.
     \end{tabular}
 \end{table}
 
-\subsubsection{Representative Test Cases}
+Simply grouping bugs is not enough to confirm that the bugs are novel.
+We thus reported \NumBugsNovel{} bugs, found by \toolname,
+  to the Chrome and Firefox bug trackers;
+  \Cref{tab:rq3-reported-bugs} thus lists each bug's
+  tracker ID (anonymized for review), title, and current status.
+\textbf{
+All \NumBugsNovel{} bugs have been accepted by the developers,
+  and \NumBugsFixed{} of them have already been fixed,
+}
+  showing that the bugs are directly actionable.
 
-Three reports illustrate the range of failures found by \toolname.
-
-Chromium issue 401XXXX was an under-invalidation bug in which element
-  measurements differed after setting a divs display to "grid" and height to "max-content". A Chromium developer
-  traced the failure to a \texttt{column-width} interaction that fell back from
+In Chrome issue 401XXXX,
+  setting a \texttt{grid} display mode and \texttt{max-content} height
+  caused an element's dimensions to be computed incorrectly.
+A Chromium developer traced the failure to
+  a \texttt{column-width} interaction that fell back from
   the new grid implementation to the legacy grid-layout path, commenting,
   \textit{``This will basically be fixed once we move multi-col over.''}
-  The report was later closed as
+The report was later closed as
   \textit{``Fixed by the new grid fragmentation.''}
+This demonstrates \toolname's ability to find under-invalidation bugs
+  in under-development browser components.
 
-Firefox bug 173XXXX changes a margin-bearing element to
-  \texttt{display:inline}, after which incremental and full layout wrap the
-  same text differently. A Mozilla developer confirmed that 
-  \textit{``the discrepancy is clearly a bug''} and explained the issue is 
-  caused by failing to reflow sufficiently in response to
-  the style change. The minimized test case also contained a mismatched
-  \texttt{</span>} tag whose resulting whitespace was necessary to reproduce
-  the failure.  Triggering a full reflow by zooming
-  makes the layouts agree, fix pending.
+In Firefox issue 173XXXX,
+  setting an \texttt{inline} display mode on a margin-bearing element
+  causes incremental and full layout wrap the same text differently.
+A Mozilla developer confirmed that 
+  \textit{``the discrepancy is clearly a bug''}
+  and explained the issue is caused by failing to reflow sufficiently
+  in response to the style change.
+The minimized test case contains whitespace
+  that is necessary to reproduce the failure.
+Triggering a full reflow by zooming makes the layouts agree; fix pending.
 
-Chromium issue 401XXXX was able to cause a crash in the LayoutNG grid
-  implementation, triggered when a fixed-position element was added as a child
-  of a grid. A Chromium tester confirmed being able to reproduce the issue
-  across macOS, Linux, and Windows. Developers fixed an incorrect assumption
-  that a grid container was always the containing block for its out-of-flow
-  children, added regression tests, and verified that the crash no longer
-  occurred.
+In Chrome issue 401XXXX,
+  \toolname was able to crash the LayoutNG grid implementation
+  by adding a fixed-position element a child to a grid.
+A Chrome tester confirmed being able to reproduce the issue
+  on macOS, Linux, and Windows.
+Developers fixed an incorrect assumption---%
+  that grid containers are the containing block
+  of their out-of-flow children---%
+  and verified that the crash no longer occurred.
+
+As a result of their experience with \toolname,
+  \textbf{
+    Mozilla began running \toolname directly
+    as part of their internal fuzzing workflow
+  },
+  further demonstrating the importance
+  of finding under-invalidation bugs.
 
 \begin{center}
 \fbox{
 \begin{minipage}{0.95\linewidth}
-\textbf{Real World Impacts:} \toolname finds
-  a substantial diversity of under-invalidation bugs,
-  including \NumBugsNovel{} confirmed bugs,
-  of which \NumBugsFixed{} have been fixed. Mozilla also \textbf{integrated \toolname into Grizzly}, its internal
-  fuzzing workflow, so that similar bugs can be detected before reaching a
-  user-visible release~\cite{grizzly}.
+\textbf{Real World Impacts:}
+  \toolname found \textbf{\NumBugsNovel{} confirmed bugs,
+  of which \NumBugsFixed{} have been fixed}.
+ Mozilla also \textbf{integrated \toolname into their fuzzing workflow},
+  ensuring that similar bugs are detected
+  before reaching a user-visible release~\cite{grizzly}.
 \end{minipage}
 }
 \end{center}
