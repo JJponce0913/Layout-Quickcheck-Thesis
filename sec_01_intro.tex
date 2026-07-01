@@ -1,7 +1,7 @@
 \section{Introduction}
 
 \textit{Web browsers} are central to modern computing,
-  hosting applications that correspond to
+  enabling applications that correspond to
   over \textbf{80\%} of daily work in some organizations%
   ~\cite{montenegro2025workforce}.
 Browser makers therefore invest heavily
@@ -9,15 +9,16 @@ Browser makers therefore invest heavily
   ~\cite{google-project-zero,mozilla-mythos,w3c,whatwg,wpt,interop},
   including through fuzzing~\cite{clusterfuzz},
   which uses a large number of randomly generated inputs
-  to identify bugs in the browser.
+  to identify bugs in browsers.
 
 Browser developers use fuzzers to find both
   security and correctness bugs.
-On the security side, fuzzers such as Domato, Grammarinator,
-  Fuzzowski, and MFFA~\cite{domato,grammarinator,fuzzowski,mffa}
+On the security side, fuzzers such as
+  Domato, Grammarinator, Fuzzowski, and MFFA%
+  ~\cite{domato,grammarinator,fuzzowski,mffa}
   detect crashes in parsers, network libraries, and media engines,
-  which are both exposed to untrusted input
-  and must maximize performance.
+  which are performance-intensive
+  but also exposed to untrusted input.
 On the correctness side, fuzzers such as
   R2Z2~\cite{song2022r2z2}, Janus~\cite{zhou2025janus}
   and Metamong~\cite{song2023metamong}
@@ -32,18 +33,20 @@ However, all of these approaches struggle to
 
 \emph{Invalidation} refers to the process by which
   the browser updates internal data structures
-  in response to style changes~\cite{panchekha2024reusing}.
+  in response to style changes~\cite{panchekha2024reusing},
+  including those triggered by JavaScript,
+  user action, or animations.
 Since style changes are frequent
-  (often every frame, 60 or even 120 times per second,
-  in response to animations),
+  (60 or even 120 times per second during animations),
   substantial research has been devoted
   to designing efficient invalidation procedures%
   ~\cite{megatron,liu2023medea}.
-Generally, browsers attempt to update \emph{as little}
-  of their internal data structures as possible;
-  however, updating \emph{too little} of this internal state
+Generally, browsers attempt to reuse \emph{as much}
+  of their internal data structures as possible, to save time.
+However, reusing \emph{too much} of this internal state
   leads to an incorrect rendering that mixes
-  fresh (updated) and stale (not updated) data.
+  fresh (updated) and stale (reused) data;
+  this is called an \emph{under-invalidation bug}.
 Updating exactly the right set of fields requires
   reasoning about transitive dependencies between layout algorithms,
   reasoning that is difficult enough that public bug trackers
@@ -51,23 +54,21 @@ Updating exactly the right set of fields requires
   contain numerous under-invalidation bugs.
 Modern invalidation algorithms like LayoutNG~\cite{kilpatrick2021layoutng}
   are purposefully designed to reduce the risk of under-invalidation,
-  while some promising algorithms~\cite{mozilla2006reflow}
-  have failed precisely because under-invalidation bugs proved
+  and promising algorithms~\cite{mozilla2006reflow} have failed
+  precisely because under-invalidation bugs proved
   difficult to find and fix.
+In other words, finding under-invalidation bugs is
+  both difficult and important.
 
 To combat these issues, this paper introduces
   a new oracle that detects under-invalidation bugs
-  via \emph{self-differential testing},
-  where either a large or small change results in
-  the \emph{same} web page,
-  and where differences thus indicate under-invalidation,
+  via self-differential testing,
   and validate this oracle on bugs mined from
   real-world browser bug databases.
 We extend this basic idea into \toolname, a fuzzer
-  that uses self-differential testing to detect under-invalidation bugs
-  using random generation and minimization
-  of complex web pages and web page changes,
-  and leveraging automated bug clustering
+  that combines this oracle with random generation
+  and minimization of complex web pages and web page changes,
+  and leverages automated bug clustering
   to reduce the bug review burden.
 We demonstrate that \toolname is effective at
   both rapidly finding under-invalidation bugs
@@ -75,26 +76,27 @@ We demonstrate that \toolname is effective at
   and minimizing and clustering them,
   reducing the style-element review volume by approximately
   \StyleElementOriginalToClusteredFactor{}.
+\textbf{
 \NumBugsNovel bugs found by \toolname
-  were reported to Chrome and Firefox,
-  all accepted by developers and \NumBugsFixed already fixed.
-\textbf{\toolname is now used as part of Mozilla's fuzzing workflow}
+  were reported to Chrome and Firefox
+  and accepted by developers, with \NumBugsFixed already fixed.
+\toolname has been adopted into Mozilla's fuzzing workflow
   to find under-invalidation bugs during development.
+}
 
 This paper makes the following contributions:
 \begin{itemize}
-    \item A new class of bugs, under-invalidation bugs,
-      that can be efficiently detected using \emph{self-differential} testing;
-    \item \toolname, a targeted fuzzer for under-invalidation bugs
+    \item A new class of bugs, \emph{under-invalidation bugs},
+      that can be efficiently detected using self-differential testing;
+    \item \toolname, a targeted fuzzer
       that generates web pages and web page changes,
       detects under-invalidation bugs with self-different testing,
       and minimizes and clusters the resulting bugs to reduce review load.
-    \item An evaluation of \toolname and its major components
-      on both Chrome and Firefox,
+    \item An evaluation of \toolname on both Chrome and Firefox,
       measuring bug discovery, minimization, and clustering
       with both direct and ablation studies.
 \end{itemize}
 \noindent
 We release \toolname
   together with evaluation artifacts, test cases, and benchmarks
-  at the following URL: https://anonymous.4open.science/r/lqc-7D637/.
+  at the following URL: \href{https://anonymous.4open.science/r/lqc-7D637/}
