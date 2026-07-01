@@ -7,7 +7,7 @@ To address the limitations of conventional browser fuzzing
 \toolname's design is shaped by three key challenges.
 
 \subsection{Challenge 1: Defining a Correctness Oracle}
-
+\input{fig_oracle_example}
 The central challenge for layout correctness is
   in constructing an oracle that detects layout bugs.
 
@@ -62,8 +62,6 @@ But the web platform standards do not allow for path dependence;
 Any difference indicates an under-invalidation bug.
 This approach compares browser rendering engine against itself,
   avoiding all sources of cross-browser and cross-version differences.
-
-\input{fig_oracle_example}
 
 \subsection{Challenge 2: Triggering Under-Invalidation Behavior}
 
