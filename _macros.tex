@@ -63,29 +63,6 @@
 \definecolor{c3}{HTML}{004D40}
 \definecolor{c4}{HTML}{FE6100}
 
-%----------------------------------------------------------
-% Code Listing Macros
-%----------------------------------------------------------
-% \callout{}: macro for callout box (e.g., \callout{Impetus:...}).
-\NewDocumentCommand{\callout}{O{}m+m}{%
-  \begin{tcolorbox}[%
-    rounded corners,
-    colframe=gray!50, 
-    boxsep = 0pt,
-    left = 7pt,
-    right = 7pt,
-    top = 5pt,
-    bottom = 5pt,
-    %width = 2pt,
-    colback=gray!7, 
-    box align=center,
-    %halign=center,
-    valign=center,
-    title = {},#1]
-    %title = {\centering\makebox[\linewidth][c]{#2}},#1]
-    #3%
-    \end{tcolorbox}%
-}
 
 %----------------------------------------------------------
 % Code Listing Macros

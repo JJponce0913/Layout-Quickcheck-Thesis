@@ -1,0 +1,244 @@
+\begin{thebibliography}{}
+
+\bibitem[Andrew, 2026]{interop}
+Andrew, R. (2026).
+\newblock {Interop 2026}: Continuing to improve the web for developers.
+\newblock web.dev.
+\newblock Published February 12, 2026.
+
+\bibitem[Draissi et~al., 2025]{draissi2025wemby}
+Draissi, O., Cloosters, T., Klein, D., Rodler, M., Musch, M., Johns, M., and
+  Davi, L. (2025).
+\newblock Wemby's web: Hunting for memory corruption in {WebAssembly}.
+\newblock {\em Proceedings of the ACM on Software Engineering}, 2(ISSTA).
+
+\bibitem[Fratric, 2017]{domato}
+Fratric, I. (2017).
+\newblock {Domato}: A {DOM} fuzzer.
+\newblock GitHub.
+\newblock Accessed June 27, 2026.
+
+\bibitem[{Google}, ]{clusterfuzz}
+{Google}.
+\newblock {ClusterFuzz}: Scalable fuzzing infrastructure.
+\newblock GitHub.
+\newblock Accessed June 27, 2026.
+
+\bibitem[{Google Project Zero}, ]{google-project-zero}
+{Google Project Zero}.
+\newblock Google project zero.
+\newblock Google Project Zero.
+\newblock Accessed June 27, 2026.
+
+\bibitem[Grewal, 2025]{grewal2025xbi}
+Grewal, B. (2025).
+\newblock Identifying cross-browser inconsistencies with vision language
+  models.
+\newblock Master's thesis, University of Alberta.
+\newblock Department of Electrical and Computer Engineering.
+
+\bibitem[Grinstead et~al., 2026]{mozilla-mythos}
+Grinstead, B., Holler, C., and Braun, F. (2026).
+\newblock Behind the scenes: Hardening {Firefox} with {Claude Mythos Preview}.
+\newblock Mozilla Hacks.
+\newblock Published May 7, 2026.
+
+\bibitem[Han et~al., 2019]{han2019codealchemist}
+Han, H., Oh, D., and Cha, S.~K. (2019).
+\newblock {CodeAlchemist}: Semantics-aware code generation to find
+  vulnerabilities in {JavaScript} engines.
+\newblock In {\em Proceedings of the Network and Distributed System Security
+  Symposium}, NDSS '19.
+
+\bibitem[Hodov{\'a}n et~al., 2018]{grammarinator}
+Hodov{\'a}n, R., Kiss, {\'A}., and Gyim{\'o}thy, T. (2018).
+\newblock {Grammarinator}: An {{ANTLR} v4} grammar-based test generator.
+\newblock GitHub.
+\newblock Accessed June 27, 2026.
+
+\bibitem[Kilpatrick and Ishii, 2021]{kilpatrick2021layoutng}
+Kilpatrick, I. and Ishii, K. (2021).
+\newblock {RenderingNG} deep-dive: {LayoutNG}.
+\newblock Chrome for Developers.
+\newblock Last updated October 8, 2021.
+
+\bibitem[Kirisame et~al., 2025]{megatron}
+Kirisame, M., Wang, T., and Panchekha, P. (2025).
+\newblock Spineless traversal for layout invalidation.
+\newblock {\em Proceedings of the ACM on Programming Languages},
+  9(PLDI):1791--1813.
+
+\bibitem[Kosaka, 2018]{kosaka2018insideBrowserPart3}
+Kosaka, M. (2018).
+\newblock Inside look at modern web browser, part 3.
+\newblock Chrome for Developers.
+
+\bibitem[{Ladybird Browser Initiative}, ]{ladybird}
+{Ladybird Browser Initiative}.
+\newblock Ladybird.
+\newblock Ladybird.
+\newblock Accessed June 27, 2026.
+
+\bibitem[Liu et~al., 2023]{liu2023medea}
+Liu, J., Chen, Y., Atkinson, E., Feng, Y., and Bodik, R. (2023).
+\newblock Conflict-driven synthesis for layout engines.
+\newblock {\em Proceedings of the ACM on Programming Languages},
+  7(PLDI):132:1--132:22.
+
+\bibitem[{MDN contributors}, ]{mozillaGecko}
+{MDN contributors}.
+\newblock Gecko.
+\newblock MDN Web Docs.
+\newblock Accessed June 30, 2026.
+
+\bibitem[{MDN Web Docs}, ]{mdnWebPerformance}
+{MDN Web Docs}.
+\newblock Web performance.
+\newblock MDN Web Docs.
+\newblock Accessed June 2, 2026.
+
+\bibitem[{MFFA contributors}, 2015]{mffa}
+{MFFA contributors} (2015).
+\newblock {MFFA}: Media fuzzing framework for {Android}.
+\newblock GitHub.
+\newblock Accessed June 27, 2026.
+
+\bibitem[Montenegro, 2025]{montenegro2025workforce}
+Montenegro, F. (2025).
+\newblock The state of workforce security: Key insights for it and security
+  leaders.
+\newblock Technical report, Palo Alto Networks.
+
+\bibitem[{Mozilla}, ]{firefoxPerformanceBestPractices}
+{Mozilla}.
+\newblock Performance best practices for firefox front-end engineers.
+\newblock Firefox Source Docs.
+\newblock Accessed June 2, 2026.
+
+\bibitem[{Mozilla Security}, ]{grizzly}
+{Mozilla Security}.
+\newblock {Grizzly}: A cross-platform browser fuzzing framework.
+\newblock GitHub repository.
+\newblock Accessed June 30, 2026.
+
+\bibitem[{MozillaWiki}, 2006]{mozilla2006reflow}
+{MozillaWiki} (2006).
+\newblock {Gecko}: Reflow refactoring.
+\newblock MozillaWiki.
+\newblock Landed December 7, 2006.
+
+\bibitem[{Open Web Advocacy}, 2025]{owa2025googleSearchMonopoly}
+{Open Web Advocacy} (2025).
+\newblock Break google's search monopoly without breaking the web.
+\newblock Open Web Advocacy.
+\newblock Published April 23, 2025.
+
+\bibitem[{Pale Moon Project}, ]{paleMoon}
+{Pale Moon Project}.
+\newblock Pale moon: Custom, private, open-source web browsing.
+\newblock Pale Moon.
+\newblock Accessed June 27, 2026.
+
+\bibitem[Panchekha and Harrelson, 2024]{panchekha2024reusing}
+Panchekha, P. and Harrelson, C. (2024).
+\newblock {\em Reusing Previous Computations}, pages 443--494.
+\newblock Oxford University Press.
+
+\bibitem[Panchekha and Torlak, 2016]{cassius}
+Panchekha, P. and Torlak, E. (2016).
+\newblock Automated reasoning for web page layout.
+\newblock {\em ACM SIGPLAN Notices (OOPSLA '16)}, 51(10):181--194.
+
+\bibitem[Park et~al., 2020]{park2020die}
+Park, S., Xu, W., Yun, I., Jang, D., and Kim, T. (2020).
+\newblock Fuzzing {JavaScript} engines with aspect-preserving mutation.
+\newblock In {\em Proceedings of the IEEE Symposium on Security and Privacy}.
+
+\bibitem[Peng et~al., 2023]{peng2023gleefuzz}
+Peng, H., Yao, Z., Amiri~Sani, A., Tian, D.~J., and Payer, M. (2023).
+\newblock {GLeeFuzz}: Fuzzing {WebGL} through error message guided mutation.
+\newblock In {\em Proceedings of the USENIX Security Symposium}.
+
+\bibitem[Rivas, 2019]{fuzzowski}
+Rivas, M. (2019).
+\newblock {Fuzzowski}: Network protocol fuzzer.
+\newblock GitHub.
+\newblock Accessed June 27, 2026.
+
+\bibitem[{Servo Project Developers}, ]{servo}
+{Servo Project Developers}.
+\newblock About servo.
+\newblock Servo.
+\newblock Accessed June 27, 2026.
+
+\bibitem[Song et~al., 2022]{song2022r2z2}
+Song, S., Hur, J., Kim, S., Rogers, P., and Lee, B. (2022).
+\newblock {R2Z2}: Detecting rendering regressions in web browsers through
+  differential fuzz testing.
+\newblock In {\em Proceedings of the 44th International Conference on Software
+  Engineering}, ICSE '22. ACM.
+
+\bibitem[Song and Lee, 2023]{song2023metamong}
+Song, S. and Lee, B. (2023).
+\newblock Metamong: Detecting render-update bugs in web browsers through
+  fuzzing.
+\newblock In {\em Proceedings of the 31st ACM Joint European Software
+  Engineering Conference and Symposium on the Foundations of Software
+  Engineering}, ESEC/FSE '23. ACM.
+
+\bibitem[{StatCounter GlobalStats}, 2026]{statcounterBrowserShare2026}
+{StatCounter GlobalStats} (2026).
+\newblock Browser market share worldwide.
+\newblock StatCounter GlobalStats.
+\newblock Worldwide browser market share, May 2026; accessed June 24, 2026.
+
+\bibitem[{The Chromium Projects}, ]{chromiumBlink}
+{The Chromium Projects}.
+\newblock Blink: Rendering engine.
+\newblock The Chromium Projects.
+\newblock Accessed June 2, 2026.
+
+\bibitem[Watanabe et~al., 2023]{watanabe2023layout}
+Watanabe, W.~M., dos Santos, D.~A., and de~Oliveira, C. (2023).
+\newblock Layout cross-browser failure classification for mobile responsive
+  design web applications: Combining classification models using feature
+  selection.
+\newblock {\em ACM Transactions on the Web}, 17(4):32:1--32:34.
+
+\bibitem[{Web Hypertext Application Technology Working Group}, ]{whatwg}
+{Web Hypertext Application Technology Working Group}.
+\newblock Standards.
+\newblock WHATWG.
+\newblock Accessed June 27, 2026.
+
+\bibitem[{web-platform-tests project}, ]{wpt}
+{web-platform-tests project}.
+\newblock web-platform-tests documentation.
+\newblock web-platform-tests.
+\newblock Accessed June 27, 2026.
+
+\bibitem[{WebKit}, ]{webkitEngine}
+{WebKit}.
+\newblock Webkit.
+\newblock WebKit.
+\newblock Accessed June 2, 2026.
+
+\bibitem[{World Wide Web Consortium}, ]{w3c}
+{World Wide Web Consortium}.
+\newblock Web standards.
+\newblock W3C.
+\newblock Accessed June 27, 2026.
+
+\bibitem[Zeng et~al., 2026]{zeng2026rtfuzz}
+Zeng, Y., Wu, Y., Lu, X., and Zhang, C. (2026).
+\newblock {RTFuzz}: Fuzzing browsers via efficient render tree mutation.
+\newblock {\em Computers \& Security}, 161:104756.
+
+\bibitem[Zhou et~al., 2025]{zhou2025janus}
+Zhou, C., Zhang, Q., Qian, B., and Jiang, Y. (2025).
+\newblock {JANUS}: Detecting rendering bugs in web browsers via visual delta
+  consistency.
+\newblock In {\em Proceedings of the 47th IEEE/ACM International Conference on
+  Software Engineering}, ICSE '25. IEEE.
+
+\end{thebibliography}

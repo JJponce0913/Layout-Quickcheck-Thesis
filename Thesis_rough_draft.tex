@@ -1,24 +1,22 @@
-\documentclass[10pt,conference]{IEEEtran}
+\documentclass[12pt]{article}
 
 \input{_deps.tex}
 \input{_macros.tex}
 \input{data.tex}
 
 \hyphenation{fuzz-ing fuzz-ers under-in-val-i-da-tion Lay-out-Quick-Check}
+\setcounter{secnumdepth}{0}
 
 \begin{document}
 
 \title{Fuzzing for Web Browser Under-Invalidation Bugs}
-
-\author{\IEEEauthorblockN{Anonymous Submission}}
+\author{Anonymous Submission}
+\date{}
 
 \maketitle
+\thispagestyle{fancy}
 
 \input{sec_00_abstract.tex}
-\begin{IEEEkeywords}
-Browser fuzzing, layout invalidation, under-invalidation, self-differential testing
-\end{IEEEkeywords}
-
 \input{sec_01_intro.tex}
 \input{sec_02_background.tex}
 \input{sec_03_challenges.tex}
@@ -27,7 +25,7 @@ Browser fuzzing, layout invalidation, under-invalidation, self-differential test
 \input{sec_06_discussion.tex}
 \input{sec_07_conclusion.tex}
 
-\bibliographystyle{IEEEtran}
+\bibliographystyle{apalike}
 \bibliography{references}
 
 \end{document}

@@ -1,14 +1,14 @@
 \section{Introduction}
 
-\textit{Web browsers} are central to modern computing,
-  enabling applications that correspond to
+\textit{Web browsers} are central to modern computing and
+  support applications that account for
   over \textbf{80\%} of daily work in some organizations%
   ~\cite{montenegro2025workforce}.
-Browser makers therefore invest heavily
-  in browser correctness,%
+Browser developers therefore invest substantially
+  in ensuring browser correctness,%
   ~\cite{google-project-zero,mozilla-mythos,w3c,whatwg,wpt,interop},
   including through fuzzing~\cite{clusterfuzz},
-  which uses a large number of randomly generated inputs
+  which uses numerous randomly generated inputs
   to identify bugs in browsers.
 
 Browser developers use fuzzers to find both
@@ -26,8 +26,8 @@ On the correctness side, fuzzers such as
   between different versions of the same browser,
   or between renderings of the different pages in the same browser,
   that may indicate a regression or rendering bug.
-However, all of these approaches struggle to
-  precisely identify \emph{under-invalidation bugs},
+However, these approaches have difficulty
+  reliably identifying \emph{under-invalidation bugs},
   a subtle yet critical type of correctness bug
   in browser layout engines.
 
@@ -36,17 +36,17 @@ However, all of these approaches struggle to
   in response to style changes~\cite{panchekha2024reusing},
   including those triggered by JavaScript,
   user action, or animations.
-Since style changes are frequent
+Because style changes occur frequently
   (60 or even 120 times per second during animations),
   substantial research has been devoted
   to designing efficient invalidation procedures%
   ~\cite{megatron,liu2023medea}.
-Generally, browsers attempt to reuse \emph{as much}
-  of their internal data structures as possible, to save time.
+Browsers generally attempt to reuse as much
+  of their internal data as possible to reduce computation time.
 However, reusing \emph{too much} of this internal state
   leads to an incorrect rendering that mixes
   fresh (updated) and stale (reused) data;
-  this is called an \emph{under-invalidation bug}.
+  this condition is called an \emph{under-invalidation bug}.
 Updating exactly the right set of fields requires
   reasoning about transitive dependencies between layout algorithms,
   reasoning that is difficult enough that public bug trackers
@@ -57,20 +57,20 @@ Modern invalidation algorithms like LayoutNG~\cite{kilpatrick2021layoutng}
   and promising algorithms~\cite{mozilla2006reflow} have failed
   precisely because under-invalidation bugs proved
   difficult to find and fix.
-In other words, finding under-invalidation bugs is
-  both difficult and important.
+Thus, under-invalidation bugs are both consequential and
+  difficult to identify.
 
-To combat these issues, this paper introduces
+To address these limitations, this paper introduces
   a new oracle that detects under-invalidation bugs
   via self-differential testing,
-  and validate this oracle on bugs mined from
+  and validates the oracle using bugs obtained from
   real-world browser bug databases.
-We extend this basic idea into \toolname, a fuzzer
+This approach is implemented in \toolname, a fuzzer
   that combines this oracle with random generation
   and minimization of complex web pages and web page changes,
-  and leverages automated bug clustering
+  and uses automated bug clustering
   to reduce the bug review burden.
-We demonstrate that \toolname is effective at
+The evaluation demonstrates that \toolname can
   both rapidly finding under-invalidation bugs
   (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox)
   and minimizing and clustering them,
@@ -86,17 +86,17 @@ We demonstrate that \toolname is effective at
 
 \medskip
 \noindent
-This paper makes the following contributions:
+This paper makes three contributions:
 \begin{itemize}
     \item A new class of bugs, \emph{under-invalidation bugs},
       that can be efficiently detected using self-differential testing;
     \item \toolname, a targeted fuzzer
       that generates web pages and web page changes,
-      detects under-invalidation bugs with self-different testing,
-      and minimizes and clusters the resulting bugs to reduce review load.
+      detects under-invalidation bugs through self-differential testing,
+      and minimizes and clusters the resulting bugs to reduce review burden;
     \item An evaluation of \toolname on both Chrome and Firefox,
       measuring bug discovery, minimization, and clustering
-      with both direct and ablation studies.
+      through direct and ablation studies.
 \end{itemize}
 \noindent
 We release \toolname

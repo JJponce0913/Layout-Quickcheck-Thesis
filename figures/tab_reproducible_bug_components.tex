@@ -2,32 +2,32 @@
   \centering
   \caption{Components of converted browser bug test cases.}
   \label{tab:reproducible-bug-components}
-  \fontsize{6}{7}\selectfont
+  \fontsize{7}{8}\selectfont
   \setlength{\tabcolsep}{3pt}
   \renewcommand{\arraystretch}{1.12}
   \begin{tabular}{@{}p{0.10\textwidth}p{0.35\textwidth}p{0.34\textwidth}p{0.15\textwidth}@{}}
     \toprule
     Case & HTML tree & Initial styles & Style mutation \\
     \midrule
-    166XXXX &
+    166194 &
     \texttt{div > (text + div > div > text) + div} &
     \texttt{outer, inner, after: clear:both; action, text: float:left; middle: display:none; margin-bottom:10em} &
     \texttt{middle.display = inline-block} \\
     \midrule
 
-    648XXXX &
+    648383 &
     \texttt{div + div + div > div} &
     \texttt{first, resizeMe, third: float:left; resizeMe: width:100\%} &
     \texttt{resizeMe.height = 100px} \\
     \midrule
 
-    173XXXX-2 &
+    1733276-2 &
     \texttt{div > (text + div)} &
     \texttt{container: width:100px; test: display:none; margin-left:150px} &
     \texttt{test.display = inline} \\
     \midrule
 
-    173XXXX-3 &
+    1733276-3 &
     \texttt{div > (text + div)} &
     \texttt{container: width:100px; test: display:none; padding-left:150px} &
     \texttt{test.display = inline} \\

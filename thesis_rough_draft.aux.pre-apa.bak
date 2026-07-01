@@ -1,0 +1,152 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{montenegro2025workforce}
+\citation{google-project-zero,mozilla-mythos,w3c,whatwg,wpt,interop}
+\citation{clusterfuzz}
+\citation{domato,grammarinator,fuzzowski,mffa}
+\citation{song2022r2z2}
+\citation{zhou2025janus}
+\citation{song2023metamong}
+\citation{panchekha2024reusing}
+\citation{megatron,liu2023medea}
+\citation{kilpatrick2021layoutng}
+\citation{mozilla2006reflow}
+\@writefile{toc}{\contentsline {section}{Introduction}{2}{section*.1}\protected@file@percent }
+\citation{panchekha2024reusing}
+\citation{chromiumBlink}
+\citation{mozillaGecko}
+\citation{webkitEngine}
+\citation{paleMoon,ladybird,servo}
+\citation{owa2025googleSearchMonopoly}
+\@writefile{toc}{\contentsline {section}{Background, Related Work, and Motivation}{3}{section*.2}\protected@file@percent }
+\citation{panchekha2024reusing}
+\citation{megatron,kosaka2018insideBrowserPart3,mdnWebPerformance}
+\citation{panchekha2024reusing}
+\citation{megatron}
+\citation{firefoxPerformanceBestPractices,kosaka2018insideBrowserPart3}
+\citation{kilpatrick2021layoutng}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces  A high-level diagram of the browser rendering pipeline. Of these steps, layout is most complex, as it instantiates the complex semantics of the CSS standard. The pipeline is rerun on every user interaction or animation, and invalidation is the main way browsers achieve high performance. Image reused with permission. }}{4}{figure.1}\protected@file@percent }
+\newlabel{fig:rendering-pipeline}{{1}{4}{A high-level diagram of the browser rendering pipeline. Of these steps, layout is most complex, as it instantiates the complex semantics of the CSS standard. The pipeline is rerun on every user interaction or animation, and invalidation is the main way browsers achieve high performance. Image reused with permission}{figure.1}{}}
+\newlabel{fig:rendering-pipeline@cref}{{[figure][1][]1}{[1][4][]4}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{Web Browsers}{4}{section*.3}\protected@file@percent }
+\citation{han2019codealchemist,park2020die}
+\citation{domato}
+\citation{peng2023gleefuzz,draissi2025wemby}
+\citation{zeng2026rtfuzz}
+\citation{song2022r2z2,zhou2025janus}
+\@writefile{toc}{\contentsline {subsection}{Browser Fuzzing}{5}{section*.4}\protected@file@percent }
+\citation{cassius}
+\citation{zhou2025janus}
+\@writefile{toc}{\contentsline {section}{Challenges and Solutions}{6}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Challenge 1: Defining a Correctness Oracle}{6}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{No obvious failures}{6}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{No ground truth}{6}{section*.8}\protected@file@percent }
+\citation{song2022r2z2}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Example execution of the self-differential oracle. Starting from the initial page, \textsc  {LQC}\xspace  applies changes incrementally and recomputes the changed page from scratch. Different resulting layouts indicate an under-invalidation bug.}}{7}{figure.2}\protected@file@percent }
+\newlabel{fig:oracle-example}{{2}{7}{Example execution of the self-differential oracle. Starting from the initial page, \toolname applies changes incrementally and recomputes the changed page from scratch. Different resulting layouts indicate an under-invalidation bug}{figure.2}{}}
+\newlabel{fig:oracle-example@cref}{{[figure][2][]2}{[1][6][]7}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Rapid change}{7}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Self-differential testing}{8}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Challenge 2: Triggering Under-Invalidation Behavior}{8}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Representing Changes}{8}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Element relations}{8}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Grammar Coverage}{9}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Low Success Rate}{9}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Bug Complexity}{9}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Challenge 3: Reducing Report Complexity}{9}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Steering}{10}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Summarization}{10}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{Implementation}{10}{section*.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Layout Oracle}{10}{section*.21}\protected@file@percent }
+\citation{grewal2025xbi,watanabe2023layout}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textsc  {LQC}\xspace  pipeline. Each test case is tested by a layout oracle. Passing subjects advance the fuzzing loop; candidates are structurally classified, minimized when necessary, and persisted with their reproduction artifacts and cumulative metrics.}}{11}{figure.3}\protected@file@percent }
+\newlabel{fig:implementation-pipeline}{{3}{11}{\toolname pipeline. Each test case is tested by a layout oracle. Passing subjects advance the fuzzing loop; candidates are structurally classified, minimized when necessary, and persisted with their reproduction artifacts and cumulative metrics}{figure.3}{}}
+\newlabel{fig:implementation-pipeline@cref}{{[figure][3][]3}{[1][10][]11}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{Test Case and Bug Generation}{12}{section*.22}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Components of converted browser bug test cases.}}{13}{table.1}\protected@file@percent }
+\newlabel{tab:reproducible-bug-components}{{1}{13}{Components of converted browser bug test cases}{table.1}{}}
+\newlabel{tab:reproducible-bug-components@cref}{{[table][1][]1}{[1][12][]13}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{Minimization and Structural Clustering}{15}{section*.23}\protected@file@percent }
+\citation{grizzly}
+\@writefile{toc}{\contentsline {section}{Evaluation}{17}{section*.24}\protected@file@percent }
+\newlabel{sec:evaluation}{{}{17}{Evaluation}{section*.24}{}}
+\newlabel{sec:evaluation@cref}{{}{[1][16][]17}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{RQ1: Finding Under-Invalidation Reports}{17}{section*.25}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Cumulative bug reports for the weighted and no-weight configurations over the 60-minute evaluation window.}}{18}{figure.4}\protected@file@percent }
+\newlabel{fig:bug-detect}{{4}{18}{Cumulative bug reports for the weighted and no-weight configurations over the 60-minute evaluation window}{figure.4}{}}
+\newlabel{fig:bug-detect@cref}{{[figure][4][]4}{[1][17][]18}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Bug-discovery results across browser and configurations.}}{18}{table.2}\protected@file@percent }
+\newlabel{tab:rq1-results}{{2}{18}{Bug-discovery results across browser and configurations}{table.2}{}}
+\newlabel{tab:rq1-results@cref}{{[table][2][]2}{[1][18][]18}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{RQ2: Reducing Developer Triage Work}{19}{section*.26}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Total CSS style elements in grouped Firefox reports before minimization, after minimization, and after clustering.}}{20}{figure.5}\protected@file@percent }
+\newlabel{fig:rq2-style-elements}{{5}{20}{Total CSS style elements in grouped Firefox reports before minimization, after minimization, and after clustering}{figure.5}{}}
+\newlabel{fig:rq2-style-elements@cref}{{[figure][5][]5}{[1][19][]20}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Cumulative minimization and clustering time for Firefox sorting and no-sorting configurations.}}{21}{figure.6}\protected@file@percent }
+\newlabel{fig:rq2-firefox}{{6}{21}{Cumulative minimization and clustering time for Firefox sorting and no-sorting configurations}{figure.6}{}}
+\newlabel{fig:rq2-firefox@cref}{{[figure][6][]6}{[1][20][]21}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{RQ3: Finding Confirmed Bugs}{21}{section*.27}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Firefox bug-group sizes, with all single bugs combined into one bar.}}{22}{figure.7}\protected@file@percent }
+\newlabel{fig:rq3-bug-group-sizes}{{7}{22}{Firefox bug-group sizes, with all single bugs combined into one bar}{figure.7}{}}
+\newlabel{fig:rq3-bug-group-sizes@cref}{{[figure][7][]7}{[1][21][]22}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Bug-group and single-bug counts by total detected reports in the Firefox sorting run.}}{22}{figure.8}\protected@file@percent }
+\newlabel{fig:rq3-firefox-diversity}{{8}{22}{Bug-group and single-bug counts by total detected reports in the Firefox sorting run}{figure.8}{}}
+\newlabel{fig:rq3-firefox-diversity@cref}{{[figure][8][]8}{[1][21][]22}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Status of bug reports submitted to Chrome and Firefox.}}{23}{table.3}\protected@file@percent }
+\newlabel{tab:rq3-reported-bugs}{{3}{23}{Status of bug reports submitted to Chrome and Firefox}{table.3}{}}
+\newlabel{tab:rq3-reported-bugs@cref}{{[table][3][]3}{[1][22][]23}{}{}{}}
+\citation{grizzly}
+\citation{grizzly}
+\citation{clusterfuzz}
+\@writefile{toc}{\contentsline {section}{Discussion \& Threats to Validity}{24}{section*.28}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Runtime Throughput}{24}{section*.29}\protected@file@percent }
+\citation{statcounterBrowserShare2026}
+\@writefile{toc}{\contentsline {subsection}{Browser Coverage}{25}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Novel Bug Discovery Rate}{25}{section*.31}\protected@file@percent }
+\bibstyle{apalike}
+\bibdata{references}
+\bibcite{interop}{{1}{2026}{{Andrew}}{{}}}
+\bibcite{draissi2025wemby}{{2}{2025}{{Draissi et~al.}}{{}}}
+\@writefile{toc}{\contentsline {section}{Conclusion}{26}{section*.32}\protected@file@percent }
+\bibcite{domato}{{3}{2017}{{Fratric}}{{}}}
+\bibcite{clusterfuzz}{{Google}{}{{}}{{}}}
+\bibcite{google-project-zero}{{Google Project Zero}{}{{}}{{}}}
+\bibcite{grewal2025xbi}{{6}{2025}{{Grewal}}{{}}}
+\bibcite{mozilla-mythos}{{7}{2026}{{Grinstead et~al.}}{{}}}
+\bibcite{han2019codealchemist}{{8}{2019}{{Han et~al.}}{{}}}
+\bibcite{grammarinator}{{9}{2018}{{Hodov{\'a}n et~al.}}{{}}}
+\bibcite{kilpatrick2021layoutng}{{10}{2021}{{Kilpatrick and Ishii}}{{}}}
+\bibcite{megatron}{{11}{2025}{{Kirisame et~al.}}{{}}}
+\bibcite{kosaka2018insideBrowserPart3}{{12}{2018}{{Kosaka}}{{}}}
+\bibcite{ladybird}{{Ladybird Browser Initiative}{}{{}}{{}}}
+\bibcite{liu2023medea}{{14}{2023}{{Liu et~al.}}{{}}}
+\bibcite{mozillaGecko}{{MDN contributors}{}{{}}{{}}}
+\bibcite{mdnWebPerformance}{{MDN Web Docs}{}{{}}{{}}}
+\bibcite{mffa}{{17}{2015}{{MFFA contributors}}{{}}}
+\bibcite{montenegro2025workforce}{{18}{2025}{{Montenegro}}{{}}}
+\bibcite{firefoxPerformanceBestPractices}{{Mozilla}{}{{}}{{}}}
+\bibcite{grizzly}{{Mozilla Security}{}{{}}{{}}}
+\bibcite{mozilla2006reflow}{{21}{2006}{{MozillaWiki}}{{}}}
+\bibcite{owa2025googleSearchMonopoly}{{22}{2025}{{Open Web Advocacy}}{{}}}
+\bibcite{paleMoon}{{Pale Moon Project}{}{{}}{{}}}
+\bibcite{panchekha2024reusing}{{24}{2024}{{Panchekha and Harrelson}}{{}}}
+\bibcite{cassius}{{25}{2016}{{Panchekha and Torlak}}{{}}}
+\bibcite{park2020die}{{26}{2020}{{Park et~al.}}{{}}}
+\bibcite{peng2023gleefuzz}{{27}{2023}{{Peng et~al.}}{{}}}
+\bibcite{fuzzowski}{{28}{2019}{{Rivas}}{{}}}
+\bibcite{servo}{{Servo Project Developers}{}{{}}{{}}}
+\bibcite{song2022r2z2}{{30}{2022}{{Song et~al.}}{{}}}
+\bibcite{song2023metamong}{{31}{2023}{{Song and Lee}}{{}}}
+\bibcite{statcounterBrowserShare2026}{{32}{2026}{{StatCounter GlobalStats}}{{}}}
+\bibcite{chromiumBlink}{{The Chromium Projects}{}{{}}{{}}}
+\bibcite{watanabe2023layout}{{34}{2023}{{Watanabe et~al.}}{{}}}
+\bibcite{whatwg}{{Web Hypertext Application Technology Working Group}{}{{}}{{}}}
+\bibcite{wpt}{{web-platform-tests project}{}{{}}{{}}}
+\bibcite{webkitEngine}{{WebKit}{}{{}}{{}}}
+\bibcite{w3c}{{World Wide Web Consortium}{}{{}}{{}}}
+\bibcite{zeng2026rtfuzz}{{39}{2026}{{Zeng et~al.}}{{}}}
+\bibcite{zhou2025janus}{{40}{2025}{{Zhou et~al.}}{{}}}
+\providecommand\NAT@force@numbers{}\NAT@force@numbers
+\gdef \@abspage@last{30}

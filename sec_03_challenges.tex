@@ -8,8 +8,8 @@ To address the limitations of conventional browser fuzzing
 
 \subsection{Challenge 1: Defining a Correctness Oracle}
 \input{fig_oracle_example}
-The central challenge for layout correctness is
-  in constructing an oracle that detects layout bugs.
+The central challenge in evaluating layout correctness is
+  constructing an oracle that detects layout defects.
 
 \paragraph{No obvious failures}
 The web platform guarantees that web page layout
@@ -27,7 +27,7 @@ They also support different sets of web platform features,
   and use different implementation internals;
   for example, Firefox performs layout in sixtieths of a pixel
   while Chrome uses sixty-fourths of a pixel~\cite{cassius}.
-Plus, some aspects of layout, like table layout,
+Moreover, some aspects of layout, such as table layout,
   are not fully specified.
 When two browsers disagree,
   this does not guarantee that either one is wrong.
@@ -50,17 +50,17 @@ However, this is insufficient to detect new features
   is most valuable, an issue noted by the R2Z2 authors.
 
 \paragraph{Self-differential testing}
-\toolname addresses this challenge using self-differential testing oracle.
+\toolname addresses this challenge with a self-differential testing oracle.
 The same HTML and CSS may be laid out correctly
   when the browser computes layout from scratch,
   but incorrectly when the browser reaches that state through an incremental update. 
 But the web platform standards do not allow for path dependence;
   the layout of a web page should depend only on the page itself
   and browser parameters like viewport size.
-\toolname thus compares the browser's layout of a page
+\toolname therefore compares the browser's layout of a page
   after incremental layout to the layout after from-scratch layout.
 Any difference indicates an under-invalidation bug.
-This approach compares browser rendering engine against itself,
+This approach compares a browser rendering engine against itself,
   avoiding all sources of cross-browser and cross-version differences.
 
 \subsection{Challenge 2: Triggering Under-Invalidation Behavior}
@@ -68,7 +68,7 @@ This approach compares browser rendering engine against itself,
 A fuzzer must not only detect when a bug has been triggered
   but also generate inputs that trigger them.
 Unfortunately, doing so for under-invalidation bugs is difficult,
-  because these bugs often rely on complex situations to trigger.
+  because these defects often depend on complex triggering conditions.
 
 \paragraph{Representing Changes}
 Invalidation algorithms consider both
@@ -89,18 +89,18 @@ Rendering the initial HTML and CSS
 \paragraph{Element relations}
 Under-invalidation bugs also depend on
   the relative position of elements in an application;
-  a bug might involve an element have a certain CSS property
-  and whose child has a certain other CSS property assigned.
-Children, grand-children, parents, siblings,
+  a defect might require an element to have one CSS property
+  while its child has another.
+Children, grandchildren, parents, siblings,
   and even more distant relationships affect layout
   and can thus be relevant to invalidation decisions.
 \toolname thus generates large element trees
   where a multitude of elements with various relations are available.
 
 \paragraph{Grammar Coverage}
-Under-invalidation bugs are most valuable to find
-  during development, when algorithms are easiest to chance.
-Yet development typically focuses on new and then-little-used features.
+Under-invalidation bugs are most valuable when detected
+  during development, when algorithms are easiest to change.
+However, development typically focuses on new and infrequently used features.
 In the case of layout under-invalidation,
   this means support for the span of CSS properties is essential.
 For this reason, \toolname is grammar-directed
@@ -113,13 +113,13 @@ The grammar-directed generation is used for
 \paragraph{Low Success Rate}
 Under-invalidation bugs are rare due to
   the high effort developers already go through to prevent them.
-This means most bug candidate do not trigger a bug,
-  and makes fuzzing slow.
+Consequently, most bug candidates do not trigger a defect,
+  which reduces fuzzing efficiency.
 Moreover, some under-invalidation bugs are known issues
   that are difficult to fix due to the structure of surrounding code;
   these bugs are less valuable to find
   than yet-unknown ``long-tail'' bugs,
-  which are even rarer.
+  which are rarer still.
 To address this low success rate,
   \toolname generates large web application states,
   with dozens of elements each with
@@ -130,14 +130,14 @@ To address this low success rate,
 While large application states are effective at
   raising the success rate for bug generation,
   the resulting application states are too complex
-  for developers to effectively address the bugs found.
+  for developers to analyze efficiently.
 \toolname thus uses minimization to shrink successful bug candidates,
   removing elements, properties, and property changes,
   while preserving the candidate's bug-triggering behavior.
 
 \subsection{Challenge 3: Reducing Report Complexity}
 
-Some under-invalidation bugs can be traced to
+Some under-invalidation bugs result from
   a simple logic error that developers can easily fix.
 Others can be useful for shaping the direction of work in progress,
   by identifying unworkable designs and driving the design process.
@@ -161,7 +161,7 @@ Many fuzzer-generated bug candidates trigger the same underlying bug;
   tediously examining them all by hand, or even with AI assistance,
   is likely to be time-consuming.
 Since similar bug candidates---especially after minimization---%
-  likely trigger the same bug,
+  are likely to trigger the same defect;
   clustering bugs by similarity reduces the review burden.
 Since under-invalidation bugs often depend
   on structural relationships in the element tree,

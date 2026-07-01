@@ -1,7 +1,7 @@
 \section{Background, Related Work, and Motivation}
 
-This section introduces web browsers and layout,
-  invalidation and under-invalidation bugs,
+This section describes web browsers and layout,
+  invalidation and under-invalidation defects,
   and the challenges of fuzzing browser layout engines.
 
 \subsection{Web Browsers}
@@ -19,7 +19,7 @@ The main production browser engines are
   Chrome's Blink engine~\cite{chromiumBlink},
   Firefox's Gecko engine~\cite{mozillaGecko},
   and Safari's WebKit engine~\cite{webkitEngine},
-  which power both the named browsers and many others,
+  which power both these browsers and others,
   such as Microsoft Edge and Samsung Browser.
 Other browser-engine projects include Pale Moon, Ladybird, and Servo%
   ~\cite{paleMoon,ladybird,servo}.
@@ -55,30 +55,29 @@ Rendering engines achieve high performance via \emph{invalidation}:
   a part of the web application's user interface,
   and the browser attempts to re-render only that portion of the page,
   re-using prior rendering results for the rest~\cite{panchekha2024reusing}.
-For example, suppose a user hovers over a menu,
+For example, when a user hovers over a menu,
   causing a dropdown to appear.
 The browser must recompute the position of the dropdown
   and all of the elements within it,
   but can reuse the size and position of the rest of the page,
-  since the they are unaffected by the user action.
+  because they are unaffected by the user action.
 
 Invalidation leads to large speed-ups~\cite{megatron},
   but risks two kinds of bugs%
   ~\cite{firefoxPerformanceBestPractices,kosaka2018insideBrowserPart3}.
 \emph{Under-invalidation} occurs when the browser
   fails to recompute changed portions of the user interface,
-  causing a partially stale interface to be shown the user,
+  causing a partially stale interface to be displayed,
   which can confuse the user or even break application functionality. 
 For example, the browser might recompute
   the dropdown's visibility status without recomputing
   its size and position, causing it to appear in the wrong location.
 Under-invalidation bugs often require
-  a specific constellation of HTML, CSS, and JavaScript code to appear.
-For example, Chrome bug \#407XXXX,\footnote{Bug identifiers are anonymized
-  for review and will be deanonymized after the review process.}
+  a specific combination of HTML, CSS, and JavaScript.
+For example, Chrome bug \#40724799,
   found with \toolname and since fixed by the Chrome developers,
-  occurred required three nested elements,
-  with the outermost having a \texttt{vertical-lr} writing style
+  required three nested elements:
+  the outermost used a \texttt{vertical-lr} writing style,
   the middle one having a \texttt{inline-grid} display style,
   the innermost having a \texttt{horizontal-tb} writing style,
   and the application then setting the white-space style
@@ -86,13 +85,13 @@ For example, Chrome bug \#407XXXX,\footnote{Bug identifiers are anonymized
 Chrome would fail to recompute an internal property called padding,
   requiring four rendering cycles
   to correctly compute the size and position of the middle element.
-Needless to say, constructing such an unlikely sequence by hand
-  is difficult, making fuzzers valuable.
+Constructing such a specific sequence manually
+  is difficult, which makes automated fuzzing valuable.
 Over-invalidation bugs, where the browser recomputes
   too much of the user interface, are also possible.
-That said, while these can slow rendering,
+Although these defects can slow rendering,
   they do not cause correctness issues
-  and aren't a focus of this paper~\cite{kilpatrick2021layoutng}.
+  and are not the focus of this paper~\cite{kilpatrick2021layoutng}.
 
 \subsection{Browser Fuzzing}
 
@@ -113,32 +112,22 @@ For example, RTFuzz mutates render-tree state,
   similar to \toolname,
   but primarily searches for crashes~\cite{zeng2026rtfuzz}.
 
-A newer collection of fuzzers instead target rendering correctness.
+A newer group of fuzzers instead targets rendering correctness.
 For example, R2Z2, Metamong, Janus~\cite{song2022r2z2,zhou2025janus}
   generate structured web pages and compare their differential rendering
-  either across browsers or across browser versions.
+  across browsers or browser versions.
 This differential testing approach can detect
   cross-browser compatibility issues,
-  but are challenging to scale because different browsers or versions
+  but it is difficult to scale because browsers and browser versions
   can differ for legitimate reasons,
   including different platform libraries,
   different user interface elements,
   or different supported features, among others.
 Under-invalidation bugs are especially ill-suited
   to a differential testing approach,
-  because browser implement different invalidation algorithms.
+  because browsers implement different invalidation algorithms.
 On the other hand, directly testing a browser layout
   against a known-good or reference implementation is not possible,
   because no browser is known to generate correct output in all cases
   and no reference implementation exists.
 
-\begin{center}
-\fbox{
-\begin{minipage}{0.95\linewidth}
-\textbf{Under-invalidation bugs should be found by fuzzing.}
-Existing browser fuzzers, which focus on differential testing,
-  cannot easily find under-invalidation bugs.
-\toolname uses self-differential testing instead.
-\end{minipage}
-}
-\end{center}

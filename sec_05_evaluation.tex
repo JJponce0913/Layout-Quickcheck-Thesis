@@ -1,15 +1,15 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-Our evaluation of \toolname answers three research questions:
+The evaluation of \toolname addressed three research questions:
 
 \begin{enumerate}
 \item[RQ1] Is \toolname effective at finding \UnderInvalidation bugs?
-\item[RQ2] Does minimization and clustering reduce review load?
+\item[RQ2] Do minimization and clustering reduce review burden?
 \item[RQ3] Does \toolname find novel under-invalidation bugs?
 \end{enumerate}
 
-We test \toolname on Google Chrome (149.0.7827.115)
+We tested \toolname on Google Chrome (149.0.7827.115)
   and Mozilla Firefox (152.0)
   using Selenium (4.40.0) via
   chromedriver (149.0.7827.115)
@@ -19,15 +19,15 @@ We test \toolname on Google Chrome (149.0.7827.115)
 Because no existing fuzzer specifically targets under-invalidation bugs,
  our evaluation focuses on \toolname’s efficiency
  and the quality of the results it produces. 
-For RQ1, we fuzz each browser for 60 minutes,
-  and additionally compare the impact of
+For RQ1, we fuzzed each browser for 60 minutes
+  and compared the effects of
   \toolname's tweaks to generation of
   the \texttt{content-visibility} and \texttt{display} properties.
-For RQ2, we perform a longer, nine-hour fuzzing run on Mozilla Firefox
-  and examine the size of original, minimized, and clustered bugs.
-For RQ3, we report on \toolname-generated bugs
-  that we have filed in the Google Chrome and Mozilla Firefox bug trackers.
-Note that RQ3 under-states the impact of \toolname on Mozilla Firefox:
+For RQ2, we performed a longer, 9-hour fuzzing run on Mozilla Firefox
+  and examined the sizes of original, minimized, and clustered bugs.
+For RQ3, we examined \toolname-generated bugs
+  filed in the Google Chrome and Mozilla Firefox bug trackers.
+RQ3 understates the impact of \toolname on Mozilla Firefox:
   after a pilot, the Mozilla developers chose to run \toolname
   in Grizzly, Mozilla's internal fuzzing tool-chain~\cite{grizzly},
   so as to detect bugs before they make it into
@@ -43,7 +43,7 @@ As a secondary goal, we also test \toolname's tweaks to
   which are implemented as default property weights.
 \Cref{fig:bug-detect} shows bug counts over time
   for all four tested configurations.
-Every configuration finds
+Every configuration found
   dozens of reports within 60 minutes:
   Chromium finds \ChromiumNoWeightsBugs{} reports without property weights
   and \ChromiumWeightsBugs{} reports with property weights,
@@ -81,9 +81,9 @@ The large counts in each case demonstrate that
 \Cref{tab:rq1-results} shows numerical results
   for candidate generation speed,
   total bug count, and bug detection rate.
-Over all, \toolname tests
-  hundreds of bug candidates per second in both browsers
-  and typically finds between one and two bugs per minute.
+Overall, \toolname tested
+  hundreds of bug candidates per minute in both browsers
+  and typically found between one and two bugs per minute.
 This allows for a fine-grained comparison of
   the effect of \toolname's default property weights.
 In Firefox, weighting raises the candidate count
@@ -117,24 +117,14 @@ Disabling this property thus dramatically reduces
   while also reducing false positives,
   explaining the reduced bug rate.
 
-\begin{center}
-\fbox{
-\begin{minipage}{0.95\linewidth}
-\textbf{RQ1:} \toolname finds under-invalidation reports in both Chromium and
-Firefox within one hour.  Its default weights improve bug discovery, though their
-benefit is browser-dependent rather than universal.
-\end{minipage}
-}
-\end{center}
-
 \subsection{RQ2: Reducing Developer Triage Work}
 
 A bug is most useful when it is easy to understand and analyze. 
 RQ2 asks whether minimization and clustering reduce the burden
   of understanding and analyzing the bug.
-As a secondary goal, we asks about
+As a secondary goal, we examined
   the impact of minimization and clustering on bug discovery speed.
-Both are measured on a nine-hour fuzzing run of Mozilla Firefox,
+Both outcomes were measured during a 9-hour fuzzing run of Mozilla Firefox
   with \toolname's default weights.
 \Cref{fig:rq2-style-elements} shows the size of the generated bugs,
   under three different conditions:
@@ -170,7 +160,7 @@ Together, minimization and clustering produce an approximately
 \end{figure}
 
 The minimization-and-clustering pipeline
-  accounts for \RuntimePercentMinClust\ the nine-hour Firefox run's runtime.
+  accounted for \RuntimePercentMinClust\ of the 9-hour Firefox run's runtime.
 However, as shown in \Cref{fig:rq2-firefox},
   clustering actually reduces the minimization-and-clustering time:
   the clustering configuration executes $\sim$130,640 test cases,
@@ -184,19 +174,9 @@ Consequently, clustering
   reduces cumulative post-processing time by $\sim$22.6\%
   and enables $\sim$4,430 additional tests to run. 
 
-\begin{center}
-\fbox{
-\begin{minipage}{0.95\linewidth}
-\textbf{RQ2:} Minimization and clustering substantially reduce
-  the burden of reviewing generated bugs
-  at relatively low additional elapsed time.
-\end{minipage}
-}
-\end{center}
-
 \subsection{RQ3: Finding Confirmed Bugs}
 
-The bugs found in RQ1 and RQ2 are not, by themselves,
+The reports found in RQ1 and RQ2 do not, by themselves,
   evidence of distinct root-cause bugs.
 RQ3 therefore asks whether \toolname finds
   a diverse collection of bugs that can survive external review.
@@ -240,15 +220,6 @@ In a long enough run, we expect that \toolname would generate
 \footnote{Perhaps roughly 80, based on the number of bug groups
   plus the number of singleton bugs at the end of the run.}
 
-\begin{center}
-\fbox{
-\begin{minipage}{0.95\linewidth}
-\textbf{RQ3:} \toolname generates distinct bugs
-  that are triggering unique invalidation conditions. 
-\end{minipage}
-}
-\end{center}
-
 \begin{table}[t]
     \centering
     \caption{Status of bug reports submitted to Chrome and Firefox.}
@@ -259,38 +230,38 @@ In a long enough run, we expect that \toolname would generate
         \toprule
         \textbf{Browser} & \textbf{Bug ID} & \textbf{Brief description} & \textbf{Status} \\
         \midrule
-        Chrome & 113XXXX & Repeated white-space application failure & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 116XXXX & Dynamic table-caption vertical order swap & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 118XXXX & Fixed-position grid layout under-invalidation & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 118XXXX & None-to-inline-grid display invalidation & \textcolor{blue}{Open} \\
-        Chrome & 119XXXX & Grid layout page crash & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 121XXXX & Inline-grid list-item text-indent invalidation & \textcolor{blue}{Open} \\
-        Chrome & 122XXXX & Grid layout under-invalidation report & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 122XXXX & Grid child display-none invalidation & \textcolor{blue}{Open} \\
+        Chrome & 1137427 & Repeated white-space application failure & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 1166887 & Dynamic table-caption vertical order swap & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 1189755 & Fixed-position grid layout under-invalidation & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 1189762 & None-to-inline-grid display invalidation & \textcolor{blue}{Open} \\
+        Chrome & 1190220 & Grid layout page crash & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 1219641 & Inline-grid list-item text-indent invalidation & \textcolor{blue}{Open} \\
+        Chrome & 1224721 & Grid layout under-invalidation report & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 1229681 & Grid child display-none invalidation & \textcolor{blue}{Open} \\
         \midrule
-        Firefox & 172XXXX & Table row-group height inconsistency & \textcolor{blue}{Open} \\
-        Firefox & 172XXXX & Table min-height overflow discrepancy & \textcolor{blue}{Open} \\
-        Firefox & 172XXXX & Dynamic break-spaces invalidation inconsistency & \textcolor{blue}{Open} \\
-        Firefox & 173XXXX & Display-inline margin line-wrapping inconsistency & \textcolor{blue}{Open} \\
-        Firefox & 173XXXX & Grid table-row height inconsistency & \textcolor{green!50!black}{Fixed} \\
-        Firefox & 173XXXX & Percent-sized grid-item height inconsistency & \textcolor{blue}{Open} \\
-        Firefox & 174XXXX & Sticky padding scrollport position inconsistency & \textcolor{green!50!black}{Fixed} \\
+        Firefox & 1721719 & Table row-group height inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 1724982 & Table min-height overflow discrepancy & \textcolor{blue}{Open} \\
+        Firefox & 1724991 & Dynamic break-spaces invalidation inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 1733276 & Display-inline margin line-wrapping inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 1735376 & Grid table-row height inconsistency & \textcolor{green!50!black}{Fixed} \\
+        Firefox & 1735931 & Percent-sized grid-item height inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 1748891 & Sticky padding scrollport position inconsistency & \textcolor{green!50!black}{Fixed} \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Simply grouping bugs is not enough to confirm that the bugs are novel.
+Grouping reports alone does not establish that the underlying defects are novel.
 We thus reported \NumBugsNovel{} bugs, found by \toolname,
   to the Chrome and Firefox bug trackers;
   \Cref{tab:rq3-reported-bugs} thus lists each bug's
-  tracker ID (anonymized for review), title, and current status.
+  tracker ID, title, and current status.
 \textbf{
 All \NumBugsNovel{} bugs have been accepted by the developers,
   and \NumBugsFixed{} of them have already been fixed,
 }
-  showing that the bugs are directly actionable.
+  demonstrating that the reports are actionable.
 
-In Chrome issue 401XXXX,
+In Chrome issue 40188093,
   setting a \texttt{grid} display mode and \texttt{max-content} height
   caused an element's dimensions to be computed incorrectly.
 A Chromium developer traced the failure to
@@ -302,20 +273,20 @@ The report was later closed as
 This demonstrates \toolname's ability to find under-invalidation bugs
   in under-development browser components.
 
-In Firefox issue 173XXXX,
+In Firefox issue 1733276,
   setting an \texttt{inline} display mode on a margin-bearing element
-  causes incremental and full layout wrap the same text differently.
+  caused incremental and full layout to wrap the same text differently.
 A Mozilla developer confirmed that 
   \textit{``the discrepancy is clearly a bug''}
-  and explained the issue is caused by failing to reflow sufficiently
+  and explained that the issue resulted from insufficient reflow
   in response to the style change.
 The minimized test case contains whitespace
   that is necessary to reproduce the failure.
 Triggering a full reflow by zooming makes the layouts agree; fix pending.
 
-In Chrome issue 401XXXX,
+In Chrome issue 40174062,
   \toolname was able to crash the LayoutNG grid implementation
-  by adding a fixed-position element a child to a grid.
+  by adding a fixed-position element as a child of a grid.
 A Chrome tester confirmed being able to reproduce the issue
   on macOS, Linux, and Windows.
 Developers fixed an incorrect assumption---%
@@ -331,15 +302,3 @@ As a result of their experience with \toolname,
   further demonstrating the importance
   of finding under-invalidation bugs.
 
-\begin{center}
-\fbox{
-\begin{minipage}{0.95\linewidth}
-\textbf{Real World Impacts:}
-  \toolname found \textbf{\NumBugsNovel{} confirmed bugs,
-  of which \NumBugsFixed{} have been fixed}.
- Mozilla also \textbf{integrated \toolname into their fuzzing workflow},
-  ensuring that similar bugs are detected
-  before reaching a user-visible release~\cite{grizzly}.
-\end{minipage}
-}
-\end{center}

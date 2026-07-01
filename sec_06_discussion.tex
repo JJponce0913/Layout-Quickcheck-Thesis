@@ -18,7 +18,7 @@ Throughput could also be improved by
   parallelizing and pipelining
   generation, rendering, and minimization,
   and distributing the fuzzing process across multiple machines.
-Naturally, all of those steps would add substantial complexity.
+Each of these changes would add substantial implementation complexity.
 
 Alternatively, the \toolname oracle and generation procedure
   could be added to existing browser fuzzing harnesses.
@@ -40,14 +40,14 @@ Mainstream browsers like Chrome, Firefox, and Safari
   may not be supported.
 That said, these more experimental rendering engines also pursue
   less aggressive invalidation strategies,
-  meaning under-invalidation testing may more less important.
+  meaning that under-invalidation testing may be less important.
 As these browsers mature, we expect them to gain support
   for the WebDriver standard and thus become testable via \toolname.
 Similarly, testing older versions of mainstream browsers
   may be difficult due to gaps in the WebDriver compatibility matrix.
 Thus, \toolname may not be usable for analyzing changes
   in under-invalidation bugs over time.
-But, all told, recent versions of Chrome, Safari, and Firefox
+Nevertheless, recent versions of Chrome, Safari, and Firefox
   account for over 90\% of web browser usage~\cite{statcounterBrowserShare2026},
   and many less-common browsers share rendering engines
   with one of the mainstream browsers;
@@ -56,7 +56,7 @@ But, all told, recent versions of Chrome, Safari, and Firefox
 
 \subsection{Novel Bug Discovery Rate}
 
-The novel bugs discussed in \Cref{sec:evaluation}
+The novel bugs discussed in the evaluation
   cover only a fraction of total bugs found by \toolname,
   since our collaborators at Mozilla preferred
   to transfer \toolname to using their internal fuzzing workflow.
@@ -68,7 +68,7 @@ In particular, it is difficult to know
   whether the clustering algorithm
   can be modified to further group related bugs
   and thus further reduce the review burden for developers.
-It's also possible that the templates from bug clusters
+The templates derived from bug clusters could also
   could be used to modify the probabilities with which
   bug candidates are generated,
   so as to reduce the rate at which duplicate bugs are found
