@@ -1,36 +1,39 @@
 
 \begin{abstract}
   Fuzzers are widely used to find
-    security-related bugs in web browser parsers and media engines
-    through crash testing,
+    security-related bugs in web browser through crash testing,
     and to discover cross-browser and cross-version regressions
     via differential testing.
   We introduce a new type of browser correctness bug,
-    under-invalidation, which occurs when a browser incorrectly
+    \emph{under-invalidation}, which occurs when a browser incorrectly
     updates its internal state after a style update.
-  Under-invalidation bugs allow for \emph{self-differential} testing,
+  Under-invalidation bugs are difficult to find
+    through differential testing due to their reliance on
+    complex relations across typically-novel web platform features.
+  But under-invalidation bugs allow for self-differential testing,
     which tests a browser rendering engine against itself,
-    leading to particularly clean fuzzing results.
+    which allows for their efficient discovery.
 
-  To find under-invalidation bugs efficiently,
-    we develop \toolname, a fuzzer that
-    rapidly generates candidates web pages,
-    tests them in a real browser via self-differential testing,
-    and then minimizes and clusters any pages
-    that witness under-invalidation bugs.
+  We therefore develop \toolname, a fuzzer that
+    tests a new self-differential oracle
+    against large bug candidates
+    to efficiently find under-invalidation bugs.
+  It then minimizes and clusters the resulting bugs
+    to reduce the review burden for developers.
   In our evaluation,
-    \toolname is able to reproduce \MozillaBugs human-submitted bugs
-    mined from the Mozilla bug tracker with self-differential testing.
-  \toolname is also able to test
-    hundreds of fuzzer candidates per minute in both Chrome and Firefox,
-    finding dozens of bug candidates in each browsers
-    (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox).
-  Furthermore, \toolname's bug minimization and clustering passes
-    reduce the style-element volume by approximately 2.7x
-    through minimization and 385x overall after clustering,
+    \toolname is able to find dozens of bugs in both Chrome and Firefox
+    (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox)
+    while testing hundreds of bug candidates per minute.
+  \toolname's minimization and clustering passes
+    then reduce the review load by
+    \todo{approximately $2.7\times$ through minimization
+      and $385\times$ overall after clustering},
     all while requiring only \RuntimePercentMinClust\ of the runtime.
   Finally, we show that \toolname finds
-    \NumBugsNovel novel bugs, across both browsers,
-    that were reported to and accepted by the developers,
-    with \NumBugsFixed already fixed.
+    \NumBugsNovel novel bugs,
+    reported to and accepted by the developers,
+    in Chrome and Firefox.
+  Of these, \NumBugsFixed bugs have already fixed
+    and the developers of Mozilla Firefox
+    have adopted \toolname in their internal fuzzing workflow.
 \end{abstract}
