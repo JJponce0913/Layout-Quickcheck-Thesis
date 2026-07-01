@@ -1,6 +1,6 @@
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
-  \resizebox{\textwidth}{!}{%
+  \resizebox{\columnwidth}{!}{%
   \begin{tikzpicture}[
       font=\small,
       screenshot/.style={
@@ -40,7 +40,7 @@
     \node[screenshot] (incremental) at (5.7,1.9) {
       \includegraphics[width=42mm]{figures/inc-page.png}
     };
-    \node[screenshot] (scratch) at (5.7,-2.0) {
+    \node[screenshot] (scratch) at (5.7,-2.5) {
       \includegraphics[width=42mm]{figures/fresh-page.png}
     };
 
@@ -107,4 +107,4 @@
     the changed page from scratch. Different resulting layouts indicate an
     under-invalidation bug.}
   \label{fig:oracle-example}
-\end{figure*}
+\end{figure}

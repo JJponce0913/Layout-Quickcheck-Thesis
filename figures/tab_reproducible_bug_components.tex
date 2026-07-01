@@ -9,25 +9,25 @@
     \toprule
     Case & HTML tree & Initial styles & Style mutation \\
     \midrule
-    166194 &
+    166XXXX &
     \texttt{div > (text + div > div > text) + div} &
     \texttt{outer, inner, after: clear:both; action, text: float:left; middle: display:none; margin-bottom:10em} &
     \texttt{middle.display = inline-block} \\
     \midrule
 
-    648383 &
+    648XXXX &
     \texttt{div + div + div > div} &
     \texttt{first, resizeMe, third: float:left; resizeMe: width:100\%} &
     \texttt{resizeMe.height = 100px} \\
     \midrule
 
-    1733276-2 &
+    173XXXX-2 &
     \texttt{div > (text + div)} &
     \texttt{container: width:100px; test: display:none; margin-left:150px} &
     \texttt{test.display = inline} \\
     \midrule
 
-    1733276-3 &
+    173XXXX-3 &
     \texttt{div > (text + div)} &
     \texttt{container: width:100px; test: display:none; padding-left:150px} &
     \texttt{test.display = inline} \\

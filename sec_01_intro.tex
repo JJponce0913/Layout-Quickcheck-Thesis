@@ -48,8 +48,7 @@ Updating exactly the right set of fields requires
   reasoning about transitive dependencies between layout algorithms,
   reasoning that is difficult enough that public bug trackers
   for Chrome, Firefox, and Safari's layout engines
-  contain numerous under-invalidation bugs%
-  ~\cite{chromium497183437,chromium379886422,mozilla1452426,mozilla539356,webkit233421,webkit97801}.
+  contain numerous under-invalidation bugs.
 Modern invalidation algorithms like LayoutNG~\cite{kilpatrick2021layoutng}
   are purposefully designed to reduce the risk of under-invalidation,
   while some promising algorithms~\cite{mozilla2006reflow}
@@ -74,11 +73,12 @@ We demonstrate that \toolname is effective at
   both rapidly finding under-invalidation bugs
   (\NumBugsChromeWeights in Chrome and \NumBugsFfxWeights in Firefox)
   and minimizing and clustering them,
-  reducing the style-element review volume by approximately 385x.
+  reducing the style-element review volume by approximately
+  \StyleElementOriginalToClusteredFactor{}.
 \NumBugsNovel bugs found by \toolname
   were reported to Chrome and Firefox,
   all accepted by developers and \NumBugsFixed already fixed.
-\toolname is now used as part of Mozilla's fuzzing workflow
+\textbf{\toolname is now used as part of Mozilla's fuzzing workflow}
   to find under-invalidation bugs during development.
 
 This paper makes the following contributions:

@@ -146,11 +146,12 @@ Size is measured by the total number of CSS properties
   though similar results would be seen for counting
   elements or modified styles.
 Minimization reduces the style-element volume in generated bugs
-  by approximately 2.7x relative to the original reports.
+  by approximately \StyleElementOriginalToMinimizedFactor{} relative to the
+  original reports.
 Combining minimization with clustering reduces the volume by a further
-  147x relative to minimized reports.
+  \StyleElementMinimizedToClusteredFactor{} relative to minimized reports.
 Together, minimization and clustering produce an approximately
-  385x reduction in style-element volume,
+  \StyleElementOriginalToClusteredFactor{} reduction in style-element volume,
   substantially lowering the review burden for developers using \toolname.
 
 \begin{figure}[!t]
@@ -239,6 +240,16 @@ In a long enough run, we expect that \toolname would generate
 \footnote{Perhaps roughly 80, based on the number of bug groups
   plus the number of singleton bugs at the end of the run.}
 
+\begin{center}
+\fbox{
+\begin{minipage}{0.95\linewidth}
+\textbf{RQ3:} Large variety of bug groups of various sizes establishes
+that \toolname is generating distinct bugs that are triggering unique
+invalidation conditions. 
+\end{minipage}
+}
+\end{center}
+
 Simply grouping bugs is not enough to confirm that the bugs are novel.
 \Cref{tab:rq3-reported-bugs} thus lists \NumBugsNovel{} bugs
   reported by the authors to the Google and Mozilla bug trackers,
@@ -259,22 +270,22 @@ All bugs have been accepted by the developers.
         \toprule
         \textbf{Browser} & \textbf{Bug ID} & \textbf{Brief description} & \textbf{Status} \\
         \midrule
-        Chrome & 1137427 & Repeated white-space application failure & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 1166887 & Dynamic table-caption vertical order swap & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 1189755 & Fixed-position grid layout under-invalidation & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 1189762 & None-to-inline-grid display invalidation & \textcolor{blue}{Open} \\
-        Chrome & 1190220 & Grid layout page crash & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 1219641 & Inline-grid list-item text-indent invalidation & \textcolor{blue}{Open} \\
-        Chrome & 1224721 & Grid layout under-invalidation report & \textcolor{green!50!black}{Fixed} \\
-        Chrome & 1229681 & Grid child display-none invalidation & \textcolor{blue}{Open} \\
+        Chrome & 113XXXX & Repeated white-space application failure & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 116XXXX & Dynamic table-caption vertical order swap & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 118XXXX & Fixed-position grid layout under-invalidation & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 118XXXX & None-to-inline-grid display invalidation & \textcolor{blue}{Open} \\
+        Chrome & 119XXXX & Grid layout page crash & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 121XXXX & Inline-grid list-item text-indent invalidation & \textcolor{blue}{Open} \\
+        Chrome & 122XXXX & Grid layout under-invalidation report & \textcolor{green!50!black}{Fixed} \\
+        Chrome & 122XXXX & Grid child display-none invalidation & \textcolor{blue}{Open} \\
         \midrule
-        Firefox & 1721719 & Table row-group height inconsistency & \textcolor{blue}{Open} \\
-        Firefox & 1724982 & Table min-height overflow discrepancy & \textcolor{blue}{Open} \\
-        Firefox & 1724991 & Dynamic break-spaces invalidation inconsistency & \textcolor{blue}{Open} \\
-        Firefox & 1733276 & Display-inline margin line-wrapping inconsistency & \textcolor{blue}{Open} \\
-        Firefox & 1735376 & Grid table-row height inconsistency & \textcolor{green!50!black}{Fixed} \\
-        Firefox & 1735931 & Percent-sized grid-item height inconsistency & \textcolor{blue}{Open} \\
-        Firefox & 1748891 & Sticky padding scrollport position inconsistency & \textcolor{green!50!black}{Fixed} \\
+        Firefox & 172XXXX & Table row-group height inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 172XXXX & Table min-height overflow discrepancy & \textcolor{blue}{Open} \\
+        Firefox & 172XXXX & Dynamic break-spaces invalidation inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 173XXXX & Display-inline margin line-wrapping inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 173XXXX & Grid table-row height inconsistency & \textcolor{green!50!black}{Fixed} \\
+        Firefox & 173XXXX & Percent-sized grid-item height inconsistency & \textcolor{blue}{Open} \\
+        Firefox & 174XXXX & Sticky padding scrollport position inconsistency & \textcolor{green!50!black}{Fixed} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -283,40 +294,41 @@ All bugs have been accepted by the developers.
 
 Three reports illustrate the range of failures found by \toolname.
 
-Chromium issue 40188093 was an under-invalidation bug in which element
+Chromium issue 401XXXX was an under-invalidation bug in which element
   measurements differed after setting a divs display to "grid" and height to "max-content". A Chromium developer
   traced the failure to a \texttt{column-width} interaction that fell back from
   the new grid implementation to the legacy grid-layout path, commenting,
-  ``This will basically be fixed once we move multi-col over.'' The report was
-  later closed as ``Fixed by the new grid fragmentation''
-  ~\cite{chromium40188093}.
+  \textit{``This will basically be fixed once we move multi-col over.''}
+  The report was later closed as
+  \textit{``Fixed by the new grid fragmentation.''}
 
-Firefox bug 1733276 changes a margin-bearing element to
+Firefox bug 173XXXX changes a margin-bearing element to
   \texttt{display:inline}, after which incremental and full layout wrap the
   same text differently. A Mozilla developer confirmed that 
-  ``the discrepancy is clearly a bug'' and explained the issue is 
+  \textit{``the discrepancy is clearly a bug''} and explained the issue is 
   caused by failing to reflow sufficiently in response to
   the style change. The minimized test case also contained a mismatched
   \texttt{</span>} tag whose resulting whitespace was necessary to reproduce
   the failure.  Triggering a full reflow by zooming
-  makes the layouts agree, but no fix has landed and the report remains open
-  ~\cite{mozilla1733276}.
+  makes the layouts agree, fix pending.
 
-Chromium issue 40174062 was able to cause a crash in the LayoutNG grid
+Chromium issue 401XXXX was able to cause a crash in the LayoutNG grid
   implementation, triggered when a fixed-position element was added as a child
   of a grid. A Chromium tester confirmed being able to reproduce the issue
   across macOS, Linux, and Windows. Developers fixed an incorrect assumption
   that a grid container was always the containing block for its out-of-flow
   children, added regression tests, and verified that the crash no longer
-  occurred~\cite{chromium40174062}.
+  occurred.
 
 \begin{center}
 \fbox{
 \begin{minipage}{0.95\linewidth}
-\textbf{RQ3:} \toolname finds
+\textbf{Real World Impacts:} \toolname finds
   a substantial diversity of under-invalidation bugs,
   including \NumBugsNovel{} confirmed bugs,
-  of which \NumBugsFixed{} have been fixed.
+  of which \NumBugsFixed{} have been fixed. Mozilla also \textbf{integrated \toolname into Grizzly}, its internal
+  fuzzing workflow, so that similar bugs can be detected before reaching a
+  user-visible release~\cite{grizzly}.
 \end{minipage}
 }
 \end{center}
